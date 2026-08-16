@@ -4,21 +4,18 @@ import pandas as pd
 from datetime import datetime
 
 # ==========================================
-# FUNÇÃO AUXILIAR DE CÁLCULO
+# FUNÇÕES AUXILIARES DE CÁLCULO
 # ==========================================
 def calcular_faturamento():
     total = 0.0
     for lead in st.session_state.leads_data:
-        # Remove "R$", ".", espaços, e troca "," por "." para converter para float
         val = lead['Valor'].replace('R$', '').replace('.', '').replace(',', '.').strip()
         try:
             total += float(val)
         except:
             continue
-    # Formata de volta para R$ X.XXX,XX
     return f"R$ {total:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
 
-# NOVA FUNÇÃO PARA SEPARAR FATURAMENTO POR CAMPANHA
 def calcular_faturamento_por_campanha():
     resumo = {}
     for lead in st.session_state.leads_data:
@@ -45,7 +42,6 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Inicializar estado da página e banco de dados simulado (Session State)
 if 'pagina_atual' not in st.session_state:
     st.session_state.pagina_atual = '📊 Visão Geral'
 
@@ -289,7 +285,7 @@ if st.session_state.pagina_atual == '📊 Visão Geral':
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # NOVA TABELA DE FATURAMENTO POR CAMPANHA
+    # TABELA DE FATURAMENTO POR CAMPANHA
     with st.container(border=True):
         st.markdown('<div class="block-header">FATURAMENTO POR CAMPANHA</div>', unsafe_allow_html=True)
         resumo_campanha = calcular_faturamento_por_campanha()
@@ -319,39 +315,30 @@ if st.session_state.pagina_atual == '📊 Visão Geral':
         )
         st.plotly_chart(fig, use_container_width=True)
 
-    # Tabela de Campanhas
+    # TABELA DE PERFORMANCE POR CAMPANHA (DEEP DIVE) - AGORA 100% DINÂMICA
     with st.container(border=True):
         st.markdown('<div class="block-header">TABELA: PERFORMANCE POR CAMPANHA (Deep Dive)</div>', unsafe_allow_html=True)
-        st.markdown("""<table class="custom-table">
-<thead>
-<tr>
-<th>Campanha</th>
-<th>Gasto</th>
-<th>Cliques</th>
-<th>CPA Real</th>
-<th>Status</th>
-<th>Ações</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Campanha A</td>
-<td>R$ 500</td>
-<td>120</td>
-<td>R$ 15,20</td>
-<td><span style="color: #22c55e;">🟢 ATIVA</span></td>
-<td><span class="action-btn">[Pausar]</span> <span class="action-btn">[Otimizar]</span></td>
-</tr>
-<tr>
-<td>Campanha B</td>
-<td>R$ 500</td>
-<td>120</td>
-<td>R$ 15,20</td>
-<td><span style="color: #22c55e;">🟢 ATIVA</span></td>
-<td><span class="action-btn">[Pausar]</span> <span class="action-btn">[Otimizar]</span></td>
-</tr>
-</tbody>
-</table>""", unsafe_allow_html=True)
+        
+        perf_campanhas = {}
+        for lead in st.session_state.leads_data:
+            camp = lead['Campanha']
+            val_str = lead['Valor'].replace('R$', '').replace('.', '').replace(',', '.').strip()
+            try:
+                v = float(val_str)
+            except:
+                v = 0.0
+            
+            if camp not in perf_campanhas:
+                perf_campanhas[camp] = {'conversoes': 0, 'receita': 0.0}
+            perf_campanhas[camp]['conversoes'] += 1
+            perf_campanhas[camp]['receita'] += v
+            
+        tabela_deep = '<table class="custom-table"><thead><tr><th>Campanha</th><th>Conversões</th><th>Receita Gerada</th><th>Status</th><th>Ações</th></tr></thead><tbody>'
+        for camp, dados in perf_campanhas.items():
+            rev_fmt = f"R$ {dados['receita']:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+            tabela_deep += f'<tr><td>{camp}</td><td>{dados["conversoes"]} leads</td><td style="color: #22c55e; font-weight: bold;">{rev_fmt}</td><td><span style="color: #22c55e;">🟢 ATIVA</span></td><td><span class="action-btn">[Pausar]</span> <span class="action-btn">[Otimizar]</span></td></tr>'
+        tabela_deep += '</tbody></table>'
+        st.markdown(tabela_deep, unsafe_allow_html=True)
 
     # Status Infra
     with st.container(border=True):
@@ -398,7 +385,7 @@ elif st.session_state.pagina_atual == '👥 Leads':
                         "Status": "🟢 Convertido"
                     }
                     st.session_state.leads_data.insert(0, novo_lead)
-                    st.rerun() # Atualiza para recarregar o cálculo
+                    st.rerun()
         
         st.markdown("<br>", unsafe_allow_html=True)
         st.markdown("### 📋 Histórico de Leads e Clientes Capturados")
