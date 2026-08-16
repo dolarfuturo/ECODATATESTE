@@ -4,9 +4,9 @@ import pandas as pd
 from datetime import datetime
 
 # ==========================================
-# FUNÇÕES AUXILIARES DE CÁLCULO
+# FUNÇÕES AUXILIARES DE CÁLCULO E DINÂMICA
 # ==========================================
-def calcular_faturamento():
+def calcular_faturamento_numerico():
     total = 0.0
     for lead in st.session_state.leads_data:
         val = lead['Valor'].replace('R$', '').replace('.', '').replace(',', '.').strip()
@@ -14,7 +14,19 @@ def calcular_faturamento():
             total += float(val)
         except:
             continue
+    return total
+
+def calcular_faturamento():
+    total = calcular_faturamento_numerico()
     return f"R$ {total:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+
+def calcular_roas():
+    investimento_total = 15400.0
+    faturamento = calcular_faturamento_numerico()
+    if investimento_total > 0:
+        roas_val = faturamento / investimento_total
+        return f"{roas_val:.2f}x"
+    return "0.00x"
 
 def calcular_faturamento_por_campanha():
     resumo = {}
@@ -64,6 +76,24 @@ if 'leads_data' not in st.session_state:
             "Campanha": "Campanha Remarketing",
             "Valor": "R$ 497,00",
             "Status": "🟢 Convertido"
+        }
+    ]
+
+if 'logs_data' not in st.session_state:
+    st.session_state.logs_data = [
+        {
+            "Horário": "16:11:02",
+            "IP": "187.12.44.192",
+            "Dispositivo": "Mobile / iOS",
+            "UTM": "utm_source=facebook",
+            "Status": "✔ Capturado"
+        },
+        {
+            "Horário": "15:42:18",
+            "IP": "177.184.9.12",
+            "Dispositivo": "Desktop / Windows",
+            "UTM": "utm_source=instagram",
+            "Status": "✔ Capturado"
         }
     ]
 
@@ -248,7 +278,7 @@ if st.session_state.pagina_atual == '📊 Visão Geral':
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # Bloco de Métricas
+    # Bloco de Métricas Dinâmicas
     m1, m2, m3, m4 = st.columns(4)
     with m1:
         st.markdown("""
@@ -267,18 +297,18 @@ if st.session_state.pagina_atual == '📊 Visão Geral':
             </div>
         """, unsafe_allow_html=True)
     with m3:
-        st.markdown("""
+        st.markdown(f"""
             <div class="metric-box">
                 <div class="metric-title">[ROAS]</div>
-                <div class="metric-value">3.13x</div>
+                <div class="metric-value">{calcular_roas()}</div>
                 <div class="metric-sub-gray">(Meta: 2.5x)</div>
             </div>
         """, unsafe_allow_html=True)
     with m4:
-        st.markdown("""
+        st.markdown(f"""
             <div class="metric-box">
                 <div class="metric-title">[LEADS QUALIFICADOS]</div>
-                <div class="metric-value">452</div>
+                <div class="metric-value">{len(st.session_state.leads_data)}</div>
                 <div class="metric-sub-green">Taxa conv. 4.2%</div>
             </div>
         """, unsafe_allow_html=True)
@@ -296,15 +326,32 @@ if st.session_state.pagina_atual == '📊 Visão Geral':
         tabela_camp += '</tbody></table>'
         st.markdown(tabela_camp, unsafe_allow_html=True)
 
-    # Gráfico
+    # GRÁFICO 100% DINÂMICO BASEADO NAS CONVERSÕES REAIS
     with st.container(border=True):
-        st.markdown('<div class="block-header">CRESCIMENTO DE VENDAS VS. GASTO</div>', unsafe_allow_html=True)
-        df_grafico = pd.DataFrame({
-            'Dia': ['00:00h', '01:00h', '16:00h', '17:00h', '18:00h', '19:00h', '20:00h', '23:00h', '30 dias'],
-            'Vendas': [1000, 2200, 3800, 4100, 5600, 6000, 5200, 7100, 1400],
-            'Gasto': [200, 800, 1000, 2500, 3200, 5800, 4500, 3200, 1300]
-        })
-        fig = px.line(df_grafico, x='Dia', y=['Vendas', 'Gasto'], markers=True)
+        st.markdown('<div class="block-header">EVOLUÇÃO DINÂMICA DE VENDAS (Baseado em Leads Registrados)</div>', unsafe_allow_html=True)
+        
+        # Gerar DataFrame dinâmico com base nos leads atuais na session_state
+        if len(st.session_state.leads_data) > 0:
+            df_leads_sorted = sorted(st.session_state.leads_data, key=lambda x: x['Horário'])
+            horarios = [item['Horário'] for item in df_leads_sorted]
+            valores_num = []
+            for item in df_leads_sorted:
+                v_str = item['Valor'].replace('R$', '').replace('.', '').replace(',', '.').strip()
+                try:
+                    valores_num.append(float(v_str))
+                except:
+                    valores_num.append(0.0)
+            
+            df_grafico = pd.DataFrame({
+                'Horário': horarios,
+                'Valor da Venda': valores_num
+            })
+            
+            fig = px.bar(df_grafico, x='Horário', y='Valor da Venda', text='Valor da Venda', color='Valor da Venda')
+        else:
+            df_grafico = pd.DataFrame({'Horário': [], 'Valor da Venda': []})
+            fig = px.line(df_grafico, x='Horário', y='Valor da Venda')
+
         fig.update_layout(
             template="plotly_dark",
             plot_bgcolor="#121824",
@@ -315,7 +362,7 @@ if st.session_state.pagina_atual == '📊 Visão Geral':
         )
         st.plotly_chart(fig, use_container_width=True)
 
-    # TABELA DE PERFORMANCE POR CAMPANHA (DEEP DIVE) - AGORA 100% DINÂMICA
+    # TABELA DE PERFORMANCE POR CAMPANHA (DEEP DIVE) - DINÂMICA
     with st.container(border=True):
         st.markdown('<div class="block-header">TABELA: PERFORMANCE POR CAMPANHA (Deep Dive)</div>', unsafe_allow_html=True)
         
@@ -345,7 +392,7 @@ if st.session_state.pagina_atual == '📊 Visão Geral':
         st.markdown('<div class="block-header">STATUS DA INFRAESTRUTURA TÉCNICA</div>', unsafe_allow_html=True)
         col_infra1, col_infra2 = st.columns(2)
         with col_infra1:
-            st.markdown("✅ Pixel Meta Server-Side: <span style='color: #22c55e;'>Sincronizado</span> (Último log: 2s atrás)", unsafe_allow_html=True)
+            st.markdown("✅ Pixel Meta Server-Side: <span style='color: #22c55e;'>Sincronizado</span> (Último log: agora mesmo)", unsafe_allow_html=True)
             st.markdown("✅ API de Conversão Google: <span style='color: #22c55e;'>OK</span>", unsafe_allow_html=True)
         with col_infra2:
             st.markdown("✅ Rastreamento de Leads: <span style='color: #22c55e;'>100%</span> (Sem perdas por adblockers)", unsafe_allow_html=True)
@@ -354,8 +401,10 @@ if st.session_state.pagina_atual == '📊 Visão Geral':
 elif st.session_state.pagina_atual == '🎯 Campanhas':
     with st.container(border=True):
         st.markdown('<div class="block-header">GESTÃO AVANÇADA DE CAMPANHAS</div>', unsafe_allow_html=True)
-        st.markdown("- **Campanha Scale Q3**: Investimento R$ 8.500,00 | Retorno R$ 28.100,00 | ROAS 3.3x")
-        st.markdown("- **Campanha Remarketing**: Investimento R$ 3.500,00 | Retorno R$ 12.400,00 | ROAS 3.5x")
+        resumo_campanha = calcular_faturamento_por_campanha()
+        for camp, receita in resumo_campanha.items():
+            rev_fmt = f"R$ {receita:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+            st.markdown(f"- **{camp}**: Receita Acumulada Real: **{rev_fmt}** | Status: <span style='color: #22c55e;'>🟢 ATIVA</span>", unsafe_allow_html=True)
 
 elif st.session_state.pagina_atual == '👥 Leads':
     with st.container(border=True):
@@ -375,8 +424,9 @@ elif st.session_state.pagina_atual == '👥 Leads':
                 
                 submitted = st.form_submit_button("🚀 Simular Envio de Webhook & Captura")
                 if submitted:
+                    horario_atual = datetime.now().strftime("%H:%M:%S")
                     novo_lead = {
-                        "Horário": datetime.now().strftime("%H:%M:%S"),
+                        "Horário": horario_atual,
                         "Nome": nome_input,
                         "E-mail": email_input[:4] + "****" + email_input[email_input.find("@"):],
                         "Telefone": tel_input,
@@ -385,6 +435,16 @@ elif st.session_state.pagina_atual == '👥 Leads':
                         "Status": "🟢 Convertido"
                     }
                     st.session_state.leads_data.insert(0, novo_lead)
+                    
+                    # Adicionar log correspondente dinamicamente
+                    novo_log = {
+                        "Horário": horario_atual,
+                        "IP": "191.240.12.89",
+                        "Dispositivo": "Mobile / Android",
+                        "UTM": f"utm_campaign={campanha_input.lower().replace(' ', '_')}",
+                        "Status": "✔ Capturado"
+                    }
+                    st.session_state.logs_data.insert(0, novo_log)
                     st.rerun()
         
         st.markdown("<br>", unsafe_allow_html=True)
@@ -399,14 +459,21 @@ elif st.session_state.pagina_atual == '👥 Leads':
 elif st.session_state.pagina_atual == '🔍 Rastreamento e Logs':
     with st.container(border=True):
         st.markdown('<div class="block-header">FONTE DA VERDADE: LOGS DE CLIQUES E DADOS DE AUDITORIA (SERVER-SIDE)</div>', unsafe_allow_html=True)
-        st.markdown("""<table class="custom-table"><thead><tr><th>Horário</th><th>IP / Origem</th><th>Dispositivo</th><th>UTM Campaign</th><th>Status</th></tr></thead><tbody>
-<tr><td>16:11:02</td><td>187.12.44.192</td><td>Mobile / iOS</td><td>utm_source=facebook</td><td><span style="color: #22c55e;">✔ Capturado</span></td></tr>
-</tbody></table>""", unsafe_allow_html=True)
+        
+        tabela_logs = '<table class="custom-table"><thead><tr><th>Horário</th><th>IP / Origem</th><th>Dispositivo</th><th>UTM Campaign</th><th>Status</th></tr></thead><tbody>'
+        for log in st.session_state.logs_data:
+            tabela_logs += f'<tr><td>{log["Horário"]}</td><td>{log["IP"]}</td><td>{log["Dispositivo"]}</td><td>{log["UTM"]}</td><td><span style="color: #22c55e;">{log["Status"]}</span></td></tr>'
+        tabela_logs += '</tbody></table>'
+        st.markdown(tabela_logs, unsafe_allow_html=True)
 
 elif st.session_state.pagina_atual == '📄 Relatórios':
     with st.container(border=True):
         st.markdown('<div class="block-header">RELATÓRIOS E AUDITORIA DE DADOS</div>', unsafe_allow_html=True)
+        st.markdown(f"- Total de Conversões Registradas: **{len(st.session_state.leads_data)}**")
+        st.markdown(f"- Faturamento Consolidado: **{calcular_faturamento()}**")
+        st.markdown(f"- ROAS Atual: **{calcular_roas()}**")
 
 elif st.session_state.pagina_atual == '⚙️ Configurações':
     with st.container(border=True):
         st.markdown('<div class="block-header">CONFIGURAÇÕES DO ECOSSISTEMA E APIS</div>', unsafe_allow_html=True)
+        st.markdown("Status da Conexão Server-Side: <span style='color: #22c55e;'>Ativa e Sincronizada com o banco de sessão em tempo real.</span>", unsafe_allow_html=True)
