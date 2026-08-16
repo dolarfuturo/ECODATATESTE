@@ -13,7 +13,7 @@ st.set_page_config(
 )
 
 # ==========================================
-# 2. ESTILIZAÇÃO CSS CUSTOMIZADA (PREENCHIMENTO TOTAL E UNIFICADO)
+# 2. ESTILIZAÇÃO CSS CUSTOMIZADA (PREENCHIMENTO UNIFICADO DE PONTA A PONTA)
 # ==========================================
 st.markdown("""
     <style>
@@ -54,22 +54,31 @@ st.markdown("""
             font-weight: 600;
         }
 
-        /* Forçar fundo sólido #121824 de ponta a ponta em todos os 3 blocos grandes */
-        div[data-testid="stVerticalBlockBorderWrapper"] {
+        /* Blocos Principais (Contêineres com Borda) */
+        [data-testid="stVerticalBlockBorderWrapper"] {
             background-color: #121824 !important;
             border: 1px solid #1e293b !important;
             border-radius: 12px !important;
-            padding: 16px !important;
+            padding: 20px !important;
             margin-bottom: 20px !important;
         }
 
-        /* Neutralizar qualquer fundo interno padrão do Streamlit dentro dos blocos */
-        div[data-testid="stVerticalBlockBorderWrapper"] div,
-        div[data-testid="stVerticalBlockBorderWrapper"] section,
-        div[data-testid="stVerticalBlockBorderWrapper"] [data-testid="stVerticalBlock"],
-        div[data-testid="stVerticalBlockBorderWrapper"] [data-testid="stHorizontalBlock"],
-        [data-testid="stDataFrame"] {
+        /* Garantir que todos os elementos internos dos blocos herdem o fundo correto */
+        [data-testid="stVerticalBlockBorderWrapper"] div,
+        [data-testid="stVerticalBlockBorderWrapper"] section,
+        [data-testid="stVerticalBlockBorderWrapper"] [data-testid="stVerticalBlock"],
+        [data-testid="stVerticalBlockBorderWrapper"] [data-testid="stHorizontalBlock"],
+        [data-testid="stVerticalBlockBorderWrapper"] [data-testid="stColumn"] {
             background-color: transparent !important;
+        }
+
+        /* Forçar o fundo da Tabela/Dataframe para #121824 perfeitamente */
+        [data-testid="stDataFrame"] {
+            background-color: #121824 !important;
+            border-radius: 8px;
+        }
+        [data-testid="stDataFrame"] > div {
+            background-color: #121824 !important;
         }
 
         /* Cartões de Métricas Superiores */
