@@ -13,7 +13,7 @@ st.set_page_config(
 )
 
 # ==========================================
-# 2. ESTILIZAÇÃO CSS CUSTOMIZADA (SESSÕES EM BLOCOS)
+# 2. ESTILIZAÇÃO CSS CUSTOMIZADA (BLOCOS SÓLIDOS)
 # ==========================================
 st.markdown("""
     <style>
@@ -54,13 +54,13 @@ st.markdown("""
             font-weight: 600;
         }
 
-        /* Blocos Escuros Isolados por Sessão (Exatamente como nos riscos da imagem) */
-        .dark-card {
-            background-color: #121824;
-            border: 1px solid #1e293b;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
+        /* Transformando os contêineres nativos nos blocos escuros perfeitos */
+        [data-testid="stContainer"] {
+            background-color: #121824 !important;
+            border: 1px solid #1e293b !important;
+            border-radius: 12px !important;
+            padding: 20px !important;
+            margin-bottom: 20px !important;
         }
 
         /* Cartões de Métricas Superiores */
@@ -111,7 +111,7 @@ st.markdown("""
             font-weight: 700;
             color: #f8fafc;
             letter-spacing: 0.5px;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
             text-transform: uppercase;
         }
     </style>
@@ -194,58 +194,54 @@ st.markdown("<br>", unsafe_allow_html=True)
 # ==========================================
 # 6. SESSÃO 1: CRESCIMENTO DE VENDAS VS. GASTO (Bloco 1)
 # ==========================================
-st.markdown('<div class="dark-card">', unsafe_allow_html=True)
-st.markdown('<div class="block-header">CRESCIMENTO DE VENDAS VS. GASTO</div>', unsafe_allow_html=True)
+with st.container(border=True):
+    st.markdown('<div class="block-header">CRESCIMENTO DE VENDAS VS. GASTO</div>', unsafe_allow_html=True)
 
-df_grafico = pd.DataFrame({
-    'Dia': ['00:00h', '01:00h', '16:00h', '17:00h', '18:00h', '19:00h', '20:00h', '23:00h', '30 dias'],
-    'Vendas': [1000, 2200, 3800, 4100, 5600, 6000, 5200, 7100, 1400],
-    'Gasto': [200, 800, 1000, 2500, 3200, 5800, 4500, 3200, 1300]
-})
+    df_grafico = pd.DataFrame({
+        'Dia': ['00:00h', '01:00h', '16:00h', '17:00h', '18:00h', '19:00h', '20:00h', '23:00h', '30 dias'],
+        'Vendas': [1000, 2200, 3800, 4100, 5600, 6000, 5200, 7100, 1400],
+        'Gasto': [200, 800, 1000, 2500, 3200, 5800, 4500, 3200, 1300]
+    })
 
-fig = px.line(df_grafico, x='Dia', y=['Vendas', 'Gasto'], markers=True)
-fig.update_layout(
-    template="plotly_dark",
-    plot_bgcolor="rgba(0,0,0,0)",
-    paper_bgcolor="rgba(0,0,0,0)",
-    margin=dict(l=10, r=10, t=10, b=10),
-    height=260,
-    legend=dict(orientation="h", y=1.15, x=0)
-)
-st.plotly_chart(fig, use_container_width=True)
-st.markdown('</div>', unsafe_allow_html=True)
+    fig = px.line(df_grafico, x='Dia', y=['Vendas', 'Gasto'], markers=True)
+    fig.update_layout(
+        template="plotly_dark",
+        plot_bgcolor="rgba(0,0,0,0)",
+        paper_bgcolor="rgba(0,0,0,0)",
+        margin=dict(l=10, r=10, t=10, b=10),
+        height=260,
+        legend=dict(orientation="h", y=1.15, x=0)
+    )
+    st.plotly_chart(fig, use_container_width=True)
 
 # ==========================================
 # 7. SESSÃO 2: TABELA DE PERFORMANCE POR CAMPANHA (Bloco 2)
 # ==========================================
-st.markdown('<div class="dark-card">', unsafe_allow_html=True)
-st.markdown('<div class="block-header">TABELA: PERFORMANCE POR CAMPANHA (Deep Dive)</div>', unsafe_allow_html=True)
+with st.container(border=True):
+    st.markdown('<div class="block-header">TABELA: PERFORMANCE POR CAMPANHA (Deep Dive)</div>', unsafe_allow_html=True)
 
-df_campanhas = pd.DataFrame({
-    'Campanha': ['Campanha A', 'Campanha B'],
-    'Gasto': ['R$ 500', 'R$ 500'],
-    'Cliques': [120, 120],
-    'CPA Real': ['R$ 15,20', 'R$ 15,20'],
-    'Status': ['🟢 ATIVA', '🟢 ATIVA'],
-    'Ações': ['[Pausar] [Otimizar]', '[Pausar] [Otimizar]']
-})
+    df_campanhas = pd.DataFrame({
+        'Campanha': ['Campanha A', 'Campanha B'],
+        'Gasto': ['R$ 500', 'R$ 500'],
+        'Cliques': [120, 120],
+        'CPA Real': ['R$ 15,20', 'R$ 15,20'],
+        'Status': ['🟢 ATIVA', '🟢 ATIVA'],
+        'Ações': ['[Pausar] [Otimizar]', '[Pausar] [Otimizar]']
+    })
 
-st.dataframe(df_campanhas, use_container_width=True, hide_index=True)
-st.markdown('</div>', unsafe_allow_html=True)
+    st.dataframe(df_campanhas, use_container_width=True, hide_index=True)
 
 # ==========================================
 # 8. SESSÃO 3: STATUS DA INFRAESTRUTURA TÉCNICA (Bloco 3)
 # ==========================================
-st.markdown('<div class="dark-card">', unsafe_allow_html=True)
-st.markdown('<div class="block-header">STATUS DA INFRAESTRUTURA TÉCNICA</div>', unsafe_allow_html=True)
+with st.container(border=True):
+    st.markdown('<div class="block-header">STATUS DA INFRAESTRUTURA TÉCNICA</div>', unsafe_allow_html=True)
 
-col_infra1, col_infra2 = st.columns(2)
-with col_infra1:
-    st.markdown("✅ Pizel Meta Server-Side: <span style='color: #22c55e;'>Sincronizado</span> (Último log: 2s atrás)", unsafe_allow_html=True)
-    st.markdown("✅ API de Conversão Google: <span style='color: #22c55e;'>OK</span>", unsafe_allow_html=True)
+    col_infra1, col_infra2 = st.columns(2)
+    with col_infra1:
+        st.markdown("✅ Pizel Meta Server-Side: <span style='color: #22c55e;'>Sincronizado</span> (Último log: 2s atrás)", unsafe_allow_html=True)
+        st.markdown("✅ API de Conversão Google: <span style='color: #22c55e;'>OK</span>", unsafe_allow_html=True)
 
-with col_infra2:
-    st.markdown("✅ Rastreamento de Leads: <span style='color: #22c55e;'>100%</span> (Sem perdas por adblockers)", unsafe_allow_html=True)
-    st.markdown("✅ Webhook Vendas: <span style='color: #22c55e;'>OK</span>", unsafe_allow_html=True)
-
-st.markdown('</div>', unsafe_allow_html=True)
+    with col_infra2:
+        st.markdown("✅ Rastreamento de Leads: <span style='color: #22c55e;'>100%</span> (Sem perdas por adblockers)", unsafe_allow_html=True)
+        st.markdown("✅ Webhook Vendas: <span style='color: #22c55e;'>OK</span>", unsafe_allow_html=True)
