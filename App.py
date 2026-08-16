@@ -13,7 +13,7 @@ st.set_page_config(
 )
 
 # ==========================================
-# 2. ESTILIZAÇÃO CSS CUSTOMIZADA (PREENCHIMENTO UNIFICADO DE PONTA A PONTA)
+# 2. ESTILIZAÇÃO CSS CUSTOMIZADA (FORÇANDO O PREENCHIMENTO EM TODOS OS BLOCOS)
 # ==========================================
 st.markdown("""
     <style>
@@ -54,7 +54,7 @@ st.markdown("""
             font-weight: 600;
         }
 
-        /* Blocos Principais (Contêineres com Borda) */
+        /* Garantindo o fundo #121824 de ponta a ponta em todos os 3 blocos com borda */
         [data-testid="stVerticalBlockBorderWrapper"] {
             background-color: #121824 !important;
             border: 1px solid #1e293b !important;
@@ -63,7 +63,7 @@ st.markdown("""
             margin-bottom: 20px !important;
         }
 
-        /* Garantir que todos os elementos internos dos blocos herdem o fundo correto */
+        /* Tornando todos os elementos internos transparentes para exibir o fundo sólido do bloco */
         [data-testid="stVerticalBlockBorderWrapper"] div,
         [data-testid="stVerticalBlockBorderWrapper"] section,
         [data-testid="stVerticalBlockBorderWrapper"] [data-testid="stVerticalBlock"],
@@ -72,12 +72,10 @@ st.markdown("""
             background-color: transparent !important;
         }
 
-        /* Forçar o fundo da Tabela/Dataframe para #121824 perfeitamente */
-        [data-testid="stDataFrame"] {
-            background-color: #121824 !important;
-            border-radius: 8px;
-        }
-        [data-testid="stDataFrame"] > div {
+        /* Forçando o fundo correto na Tabela (Bloco 7) */
+        [data-testid="stDataFrame"], 
+        [data-testid="stDataFrame"] > div, 
+        [data-testid="stDataFrame"] div[data-baseweb="block"] {
             background-color: #121824 !important;
         }
 
@@ -210,7 +208,7 @@ with m4:
 st.markdown("<br>", unsafe_allow_html=True)
 
 # ==========================================
-# 6. SESSÃO 1: CRESCIMENTO DE VENDAS VS. GASTO
+# 6. SESSÃO 1: CRESCIMENTO DE VENDAS VS. GASTO (Bloco 1)
 # ==========================================
 with st.container(border=True):
     st.markdown('<div class="block-header">CRESCIMENTO DE VENDAS VS. GASTO</div>', unsafe_allow_html=True)
@@ -233,7 +231,7 @@ with st.container(border=True):
     st.plotly_chart(fig, use_container_width=True)
 
 # ==========================================
-# 7. SESSÃO 2: TABELA DE PERFORMANCE POR CAMPANHA
+# 7. SESSÃO 2: TABELA DE PERFORMANCE POR CAMPANHA (Bloco 2)
 # ==========================================
 with st.container(border=True):
     st.markdown('<div class="block-header">TABELA: PERFORMANCE POR CAMPANHA (Deep Dive)</div>', unsafe_allow_html=True)
@@ -250,7 +248,7 @@ with st.container(border=True):
     st.dataframe(df_campanhas, use_container_width=True, hide_index=True)
 
 # ==========================================
-# 8. SESSÃO 3: STATUS DA INFRAESTRUTURA TÉCNICA
+# 8. SESSÃO 3: STATUS DA INFRAESTRUTURA TÉCNICA (Bloco 3)
 # ==========================================
 with st.container(border=True):
     st.markdown('<div class="block-header">STATUS DA INFRAESTRUTURA TÉCNICA</div>', unsafe_allow_html=True)
