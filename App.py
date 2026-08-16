@@ -93,6 +93,15 @@ def calcular_roas():
         return f"{roas_val:.2f}x"
     return "0.00x"
 
+def calcular_percentual_faturamento():
+    inv = st.session_state.investimento_total
+    fat = calcular_faturamento_numerico()
+    if inv > 0:
+        perc = ((fat - inv) / inv) * 100
+        sinal = "▲" if perc >= 0 else "▼"
+        return f"{sinal} {abs(perc):.1f}% vs Inv.", perc >= 0
+    return "▲ 0.0% vs Inv.", True
+
 def calcular_faturamento_por_campanha():
     resumo = {camp: 0.0 for camp in st.session_state.campanhas_cadastradas}
     for lead in st.session_state.leads_data:
@@ -186,6 +195,11 @@ st.markdown("""
         .metric-sub-green {
             font-size: 12px;
             color: #22c55e;
+            font-weight: 500;
+        }
+        .metric-sub-red {
+            font-size: 12px;
+            color: #ef4444;
             font-weight: 500;
         }
         .metric-sub-gray {
@@ -283,6 +297,9 @@ if st.session_state.pagina_atual == '📊 Visão Geral':
     st.markdown("<br>", unsafe_allow_html=True)
 
     # Bloco de Métricas
+    txt_perc_fat, eh_positivo_fat = calcular_percentual_faturamento()
+    classe_sub_fat = "metric-sub-green" if eh_positivo_fat else "metric-sub-red"
+
     m1, m2, m3, m4 = st.columns(4)
     with m1:
         st.markdown(f"""
@@ -297,7 +314,7 @@ if st.session_state.pagina_atual == '📊 Visão Geral':
             <div class="metric-box">
                 <div class="metric-title">[FATURAMENTO]</div>
                 <div class="metric-value">{calcular_faturamento()}</div>
-                <div class="metric-sub-green">▲ 6%</div>
+                <div class="{classe_sub_fat}">{txt_perc_fat}</div>
             </div>
         """, unsafe_allow_html=True)
     with m3:
