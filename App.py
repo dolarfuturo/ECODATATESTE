@@ -9,136 +9,197 @@ st.set_page_config(
     page_title="EcoData Performance",
     page_icon="📊",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed"
 )
 
 # ==========================================
-# 2. ESTILIZAÇÃO E COMPONENTES VISUAIS (CSS)
+# 2. ESTILIZAÇÃO CSS CUSTOMIZADA (IDÊNTICA À IMAGEM)
 # ==========================================
 st.markdown("""
     <style>
-        .main {
-            background-color: #0e1117;
+        /* Fundo geral da aplicação em tom escuro profundo */
+        .stApp {
+            background-color: #0a0e17;
+            color: #ffffff;
         }
-        /* Estilo customizado para os blocos/cards */
-        .block-container {
-            padding-top: 2rem;
+        
+        /* Estilo dos blocos escuros isolados (Cards) */
+        .dark-card {
+            background-color: #121824;
+            border: 1px solid #1e293b;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        /* Cartões de Métricas Superiores */
+        .metric-box {
+            background-color: #121824;
+            border: 1px solid #1e293b;
+            border-radius: 10px;
+            padding: 16px;
+            text-align: left;
+        }
+        .metric-title {
+            font-size: 11px;
+            color: #64748b;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+        .metric-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ffffff;
+            margin-top: 6px;
+            margin-bottom: 4px;
+        }
+        .metric-sub-green {
+            font-size: 12px;
+            color: #22c55e;
+            font-weight: 500;
+        }
+        .metric-sub-gray {
+            font-size: 12px;
+            color: #94a3b8;
+        }
+
+        /* Badge de Status Online */
+        .status-badge {
+            background-color: #052e16;
+            border: 1px solid #15803d;
+            color: #22c55e;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            display: inline-block;
+        }
+
+        /* Títulos Internos dos Blocos */
+        .block-header {
+            font-size: 14px;
+            font-weight: 700;
+            color: #f8fafc;
+            letter-spacing: 0.5px;
+            margin-bottom: 15px;
+            text-transform: uppercase;
         }
     </style>
 """, unsafe_allow_html=True)
 
 # ==========================================
-# 3. MENU LATERAL E FILTROS GLOBAIS
+# 3. BARRA SUPERIOR (Filtros e Status da Infra)
 # ==========================================
-st.sidebar.markdown("## 🧭 Navegação")
-pagina = st.sidebar.radio(
-    "Escolha a visualização:", 
-    ["Visão Geral (Dashboard)", "Log de Cliques Detalhado"]
+col_filter, col_status = st.columns([3, 1])
+
+with col_filter:
+    st.markdown("<span style='color: #94a3b8; font-size: 13px;'>Filtro de Data:</span> &nbsp;&nbsp; `[ Últimos 30 Dias ▾ ]`", unsafe_allow_html=True)
+
+with col_status:
+    st.markdown("<div style='text-align: right;'><span class='status-badge'>🟢 ONLINE - API ATIVA</span></div>", unsafe_allow_html=True)
+
+st.markdown("<br>", unsafe_allow_html=True)
+
+# ==========================================
+# 4. BLOCO 1: MÉTRICAS SUPERIORES (4 Cards)
+# ==========================================
+m1, m2, m3, m4 = st.columns(4)
+
+with m1:
+    st.markdown("""
+        <div class="metric-box">
+            <div class="metric-title">[INVESTIMENTO]</div>
+            <div class="metric-value">R$ 15.400,00</div>
+            <div class="metric-sub-green">▲ 12%</div>
+        </div>
+    """, unsafe_allow_html=True)
+
+with m2:
+    st.markdown("""
+        <div class="metric-box">
+            <div class="metric-title">[FATURAMENTO]</div>
+            <div class="metric-value">R$ 48.200,00</div>
+            <div class="metric-sub-green">▲ 6%</div>
+        </div>
+    """, unsafe_allow_html=True)
+
+with m3:
+    st.markdown("""
+        <div class="metric-box">
+            <div class="metric-title">[ROAS]</div>
+            <div class="metric-value">3.13x</div>
+            <div class="metric-sub-gray">(Meta: 2.5x)</div>
+        </div>
+    """, unsafe_allow_html=True)
+
+with m4:
+    st.markdown("""
+        <div class="metric-box">
+            <div class="metric-title">[LEADS GUALIFICADOS]</div>
+            <div class="metric-value">452</div>
+            <div class="metric-sub-green">Texa conv. 4.2%</div>
+        </div>
+    """, unsafe_allow_html=True)
+
+st.markdown("<br>", unsafe_allow_html=True)
+
+# ==========================================
+# 5. BLOCO 2: GRÁFICO (Isolado em Card Escuro)
+# ==========================================
+st.markdown('<div class="dark-card">', unsafe_allow_html=True)
+st.markdown('<div class="block-header">CRESCIMENTO DE VENDAS VS. GASTO</div>', unsafe_allow_html=True)
+
+# Dados idênticos à proporção da imagem
+df_grafico = pd.DataFrame({
+    'Dia': ['00:00h', '01:00h', '16:00h', '17:00h', '18:00h', '19:00h', '20:00h', '23:00h', '30 dias'],
+    'Vendas': [1000, 2200, 3800, 4100, 5600, 6000, 5200, 7100, 1400],
+    'Gasto': [200, 800, 1000, 2500, 3200, 5800, 4500, 3200, 1300]
+})
+
+fig = px.line(df_grafico, x='Dia', y=['Vendas', 'Gasto'], markers=True)
+fig.update_layout(
+    template="plotly_dark",
+    plot_bgcolor="rgba(0,0,0,0)",
+    paper_bgcolor="rgba(0,0,0,0)",
+    margin=dict(l=10, r=10, t=10, b=10),
+    height=260,
+    legend=dict(orientation="h", y=1.15, x=0)
 )
-
-st.sidebar.markdown("---")
-st.sidebar.markdown("### ⚙️ Filtros Globais")
-filtro_data = st.sidebar.selectbox(
-    "Período:", 
-    ["Últimos 7 Dias", "Últimos 30 Dias", "Este Mês", "Personalizado"]
-)
+st.plotly_chart(fig, use_container_width=True)
+st.markdown('</div>', unsafe_allow_html=True)
 
 # ==========================================
-# 4. VISÃO PRINCIPAL: DASHBOARD
+# 6. BLOCO 3: TABELA DE PERFORMANCE (Isolado em Card Escuro)
 # ==========================================
-if pagina == "Visão Geral (Dashboard)":
-    
-    # --- BLOCO 0: CABEÇALHO ---
-    col_title, col_status = st.columns([3, 1])
-    with col_title:
-        st.title("📊 EcoData Performance Dashboard")
-    with col_status:
-        st.markdown("<br>", unsafe_allow_html=True)
-        st.success("🟢 ONLINE - API ATIVA")
+st.markdown('<div class="dark-card">', unsafe_allow_html=True)
+st.markdown('<div class="block-header">TABELA: PERFORMANCE POR CAMPANHA (Deep Dive)</div>', unsafe_allow_html=True)
 
-    st.markdown("---")
+df_campanhas = pd.DataFrame({
+    'Campanha': ['Campanha A', 'Campanha B'],
+    'Gasto': ['R$ 500', 'R$ 500'],
+    'Cliques': [120, 120],
+    'CPA Real': ['R$ 15,20', 'R$ 15,20'],
+    'Status': ['🟢 ATIVA', '🟢 ATIVA'],
+    'Ações': ['[Pausar] [Otimizar]', '[Pausar] [Otimiazer]']
+})
 
-    # --- BLOCO 1: TOP METRICS (Cartões Superiores) ---
-    st.markdown("### 📌 Indicadores Gerais")
-    c1, c2, c3, c4 = st.columns(4)
-    with c1:
-        st.metric("INVESTIMENTO", "R$ 15.400,00", "▲ 12%")
-    with c2:
-        st.metric("FATURAMENTO", "R$ 48.200,00", "▲ 8%")
-    with c3:
-        st.metric("ROAS", "3.13x", "Meta: 2.5x")
-    with c4:
-        st.metric("LEADS QUALIFICADOS", "452", "Taxa: 4.2%")
-
-    st.markdown("---")
-
-    # --- BLOCO 2: GRÁFICO (Isolado em um Card Escuro) ---
-    with st.container(border=True):
-        st.subheader("📈 Crescimento de Vendas vs. Gasto")
-        st.markdown("<p style='color: gray; font-size: 14px;'>Evolução diária do capital investido frente ao retorno gerado.</p>", unsafe_allow_html=True)
-        
-        # Dados do Gráfico
-        data_grafico = {
-            'Dia': ['01 Jun', '05 Jun', '10 Jun', '15 Jun', '20 Jun', '25 Jun', '30 Jun'],
-            'Vendas': [1200, 2300, 3500, 4200, 5600, 6800, 7900],
-            'Gasto': [500, 800, 1100, 1400, 1200, 1500, 1650]
-        }
-        df_grafico = pd.DataFrame(data_grafico)
-
-        fig = px.line(df_grafico, x='Dia', y=['Vendas', 'Gasto'], markers=True)
-        fig.update_layout(
-            template="plotly_dark",
-            plot_bgcolor="rgba(0,0,0,0)",
-            paper_bgcolor="rgba(0,0,0,0)",
-            margin=dict(l=20, r=20, t=20, b=20),
-            legend=dict(orientation="h", y=1.15, x=0)
-        )
-        st.plotly_chart(fig, use_container_width=True)
-
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    # --- BLOCO 3: TABELA DE PERFORMANCE (Isolado em um Card Escuro) ---
-    with st.container(border=True):
-        st.subheader("🎯 Tabela: Performance por Campanha (Deep Dive)")
-        st.markdown("<p style='color: gray; font-size: 14px;'>Auditoria detalhada por canal e conjunto de anúncios.</p>", unsafe_allow_html=True)
-        
-        # Dados da Tabela
-        df_campanhas = pd.DataFrame({
-            'Campanha': ['Campanha A', 'Campanha B', 'Campanha C'],
-            'Gasto': ['R$ 500,00', 'R$ 300,00', 'R$ 100,00'],
-            'Cliques': [120, 95, 40],
-            'CPA Real': ['R$ 15,20', 'R$ 18,50', 'R$ 12,00'],
-            'Status': ['🟢 ATIVA', '🟢 ATIVA', '🔴 PAUSADA']
-        })
-        st.dataframe(df_campanhas, use_container_width=True)
-
-    st.markdown("---")
-
-    # --- BLOCO 4: STATUS DA INFRAESTRUTURA TÉCNICA ---
-    st.subheader("🛠️ Status da Infraestrutura Técnica")
-    col_a, col_b = st.columns(2)
-    with col_a:
-        st.success("✔ Pixel Meta Server-Side: Sincronizado (Último log: 2s atrás)")
-        st.success("✔ API de Conversão Google: OK")
-    with col_b:
-        st.success("✔ Rastreamento de Leads: 100% (Sem perdas por adblockers)")
-        st.success("✔ Webhook Vendas: OK")
+st.dataframe(df_campanhas, use_container_width=True, hide_index=True)
+st.markdown('</div>', unsafe_allow_html=True)
 
 # ==========================================
-# 5. VISÃO SECUNDÁRIA: LOG DE CLIQUES
+# 7. BLOCO 4: STATUS DA INFRAESTRUTURA (Isolado em Card Escuro)
 # ==========================================
-elif pagina == "Log de Cliques Detalhado":
-    st.title("🔍 Quem Clicou (Logs em Tempo Real)")
-    st.write("Acompanhe cada acesso capturado pelo seu servidor antes do redirecionamento:")
-    
-    with st.container(border=True):
-        df_cliques = pd.DataFrame({
-            'Horário': ['12:01:45', '12:05:12', '12:10:30', '12:15:02'],
-            'IP do Usuário': ['192.168.1.15', '201.88.42.10', '177.22.10.5', '187.14.99.20'],
-            'Origem': ['Instagram (Campanha A)', 'Google (Pesquisa)', 'Instagram (Campanha A)', 'Facebook (Campanha B)'],
-            'Cliques': [1, 3, 1, 2]
-        })
-        st.dataframe(df_cliques, use_container_width=True)
-    
-    st.markdown("---")
-    st.info("💡 No futuro, cada linha desta tabela será preenchida automaticamente pelas informações reais salvas no seu banco de dados.")
+st.markdown('<div class="dark-card">', unsafe_allow_html=True)
+st.markdown('<div class="block-header">STATUS DA INFRAESTRUTURA TÉCNICA</div>', unsafe_allow_html=True)
+
+col_infra1, col_infra2 = st.columns(2)
+with col_infra1:
+    st.markdown("✅ Pizel Meta Server-Side: <span style='color: #22c55e;'>Sincronizado</span> (Último log: 2s atiós)", unsafe_allow_html=True)
+    st.markdown("✅ API de Cenversão Google: <span style='color: #22c55e;'>OK</span>", unsafe_allow_html=True)
+
+with col_infra2:
+    st.markdown("✅ Rastreamento de Leads: <span style='color: #22c55e;'>100%</span> (Sem perdas por adblockers)", unsafe_allow_html=True)
+    st.markdown("✅ Webhook Vendas: <span style='color: #22c55e;'>OK</span>", unsafe_allow_html=True)
+
+st.markdown('</div>', unsafe_allow_html=True)
