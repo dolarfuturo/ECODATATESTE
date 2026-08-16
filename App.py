@@ -326,31 +326,33 @@ if st.session_state.pagina_atual == '📊 Visão Geral':
         tabela_camp += '</tbody></table>'
         st.markdown(tabela_camp, unsafe_allow_html=True)
 
-    # GRÁFICO 100% DINÂMICO BASEADO NAS CONVERSÕES REAIS
+    # GRÁFICO EM LINHA 100% DINÂMICO (EVOLUÇÃO ACUMULADA)
     with st.container(border=True):
-        st.markdown('<div class="block-header">EVOLUÇÃO DINÂMICA DE VENDAS (Baseado em Leads Registrados)</div>', unsafe_allow_html=True)
+        st.markdown('<div class="block-header">EVOLUÇÃO EM LINHA: FATURAMENTO ACUMULADO</div>', unsafe_allow_html=True)
         
-        # Gerar DataFrame dinâmico com base nos leads atuais na session_state
         if len(st.session_state.leads_data) > 0:
             df_leads_sorted = sorted(st.session_state.leads_data, key=lambda x: x['Horário'])
             horarios = [item['Horário'] for item in df_leads_sorted]
             valores_num = []
+            acumulado = 0.0
             for item in df_leads_sorted:
                 v_str = item['Valor'].replace('R$', '').replace('.', '').replace(',', '.').strip()
                 try:
-                    valores_num.append(float(v_str))
+                    val = float(v_str)
                 except:
-                    valores_num.append(0.0)
+                    val = 0.0
+                acumulado += val
+                valores_num.append(acumulado)
             
             df_grafico = pd.DataFrame({
                 'Horário': horarios,
-                'Valor da Venda': valores_num
+                'Faturamento Acumulado (R$)': valores_num
             })
             
-            fig = px.bar(df_grafico, x='Horário', y='Valor da Venda', text='Valor da Venda', color='Valor da Venda')
+            fig = px.line(df_grafico, x='Horário', y='Faturamento Acumulado (R$)', markers=True)
         else:
-            df_grafico = pd.DataFrame({'Horário': [], 'Valor da Venda': []})
-            fig = px.line(df_grafico, x='Horário', y='Valor da Venda')
+            df_grafico = pd.DataFrame({'Horário': [], 'Faturamento Acumulado (R$)': []})
+            fig = px.line(df_grafico, x='Horário', y='Faturamento Acumulado (R$)')
 
         fig.update_layout(
             template="plotly_dark",
@@ -436,7 +438,7 @@ elif st.session_state.pagina_atual == '👥 Leads':
                     }
                     st.session_state.leads_data.insert(0, novo_lead)
                     
-                    # Adicionar log correspondente dinamicamente
+                    # Adicionar log dinamicamente na aba de rastreamento
                     novo_log = {
                         "Horário": horario_atual,
                         "IP": "191.240.12.89",
@@ -472,6 +474,21 @@ elif st.session_state.pagina_atual == '📄 Relatórios':
         st.markdown(f"- Total de Conversões Registradas: **{len(st.session_state.leads_data)}**")
         st.markdown(f"- Faturamento Consolidado: **{calcular_faturamento()}**")
         st.markdown(f"- ROAS Atual: **{calcular_roas()}**")
+        
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown("### 📥 Exportar Dados")
+        
+        if len(st.session_state.leads_data) > 0:
+            df_export = pd.DataFrame(st.session_state.leads_data)
+            csv_data = df_export.to_csv(index=False).encode('utf-8')
+            st.download_button(
+                label="📄 Baixar Relatório Completo de Leads (CSV)",
+                data=csv_data,
+                file_name="relatorio_leads_ecodata.csv",
+                mime="text/csv"
+            )
+        else:
+            st.info("Nenhum dado disponível para exportação no momento.")
 
 elif st.session_state.pagina_atual == '⚙️ Configurações':
     with st.container(border=True):
