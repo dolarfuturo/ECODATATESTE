@@ -13,7 +13,7 @@ st.set_page_config(
 )
 
 # ==========================================
-# 2. ESTILIZAÇÃO CSS CUSTOMIZADA (BLOCOS SÓLIDOS)
+# 2. ESTILIZAÇÃO CSS CUSTOMIZADA (COR INTERNA DOS BLOCOS)
 # ==========================================
 st.markdown("""
     <style>
@@ -54,13 +54,16 @@ st.markdown("""
             font-weight: 600;
         }
 
-        /* Transformando os contêineres nativos nos blocos escuros perfeitos */
+        /* Forçando a cor de fundo #121824 por dentro e por fora dos 3 blocos */
         [data-testid="stContainer"] {
             background-color: #121824 !important;
             border: 1px solid #1e293b !important;
             border-radius: 12px !important;
             padding: 20px !important;
             margin-bottom: 20px !important;
+        }
+        [data-testid="stContainer"] div {
+            background-color: transparent !important;
         }
 
         /* Cartões de Métricas Superiores */
@@ -192,7 +195,7 @@ with m4:
 st.markdown("<br>", unsafe_allow_html=True)
 
 # ==========================================
-# 6. SESSÃO 1: CRESCIMENTO DE VENDAS VS. GASTO (Bloco 1)
+# 6. SESSÃO 1: CRESCIMENTO DE VENDAS VS. GASTO (Bloco 1 com cor interna)
 # ==========================================
 with st.container(border=True):
     st.markdown('<div class="block-header">CRESCIMENTO DE VENDAS VS. GASTO</div>', unsafe_allow_html=True)
@@ -215,7 +218,7 @@ with st.container(border=True):
     st.plotly_chart(fig, use_container_width=True)
 
 # ==========================================
-# 7. SESSÃO 2: TABELA DE PERFORMANCE POR CAMPANHA (Bloco 2)
+# 7. SESSÃO 2: TABELA DE PERFORMANCE POR CAMPANHA (Bloco 2 com cor interna)
 # ==========================================
 with st.container(border=True):
     st.markdown('<div class="block-header">TABELA: PERFORMANCE POR CAMPANHA (Deep Dive)</div>', unsafe_allow_html=True)
@@ -232,7 +235,7 @@ with st.container(border=True):
     st.dataframe(df_campanhas, use_container_width=True, hide_index=True)
 
 # ==========================================
-# 8. SESSÃO 3: STATUS DA INFRAESTRUTURA TÉCNICA (Bloco 3)
+# 8. SESSÃO 3: STATUS DA INFRAESTRUTURA TÉCNICA (Bloco 3 com cor interna)
 # ==========================================
 with st.container(border=True):
     st.markdown('<div class="block-header">STATUS DA INFRAESTRUTURA TÉCNICA</div>', unsafe_allow_html=True)
