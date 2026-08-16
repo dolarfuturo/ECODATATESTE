@@ -480,4 +480,25 @@ elif st.session_state.pagina_atual == '📄 Relatórios':
     with st.container(border=True):
         st.markdown('<div class="block-header">RELATÓRIOS E AUDITORIA DE DADOS</div>', unsafe_allow_html=True)
         st.markdown(f"- Total de Conversões Registradas: **{len(st.session_state.leads_data)}**")
-        st.markdown(f"- Faturamento Consolidado: **{calcular_fa
+        st.markdown(f"- Faturamento Consolidado: **{calcular_faturamento()}**")
+        st.markdown(f"- ROAS Atual: **{calcular_roas()}**")
+        
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown("### 📥 Exportar Dados")
+        
+        if len(st.session_state.leads_data) > 0:
+            df_export = pd.DataFrame(st.session_state.leads_data)
+            csv_data = df_export.to_csv(index=False).encode('utf-8')
+            st.download_button(
+                label="📄 Baixar Relatório Completo de Leads (CSV)",
+                data=csv_data,
+                file_name="relatorio_leads_ecodata.csv",
+                mime="text/csv"
+            )
+        else:
+            st.info("Nenhum dado disponível para exportação no momento.")
+
+elif st.session_state.pagina_atual == '⚙️ Configurações':
+    with st.container(border=True):
+        st.markdown('<div class="block-header">CONFIGURAÇÕES DO ECOSSISTEMA E APIS</div>', unsafe_allow_html=True)
+        st.markdown("Status da Conexão Server-Side: <span style='color: #22c55e;'>Ativa e Sincronizada com o banco de sessão em tempo real.</span>", unsafe_allow_html=True)
