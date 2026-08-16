@@ -13,34 +13,12 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Inicializar estado da página e banco de dados simulado (Session State)
+# Inicializar estado da página
 if 'pagina_atual' not in st.session_state:
-    st.session_state.pagina_atual = '👥 Leads'
-
-if 'leads_data' not in st.session_state:
-    st.session_state.leads_data = [
-        {
-            "Horário": "16:11:02",
-            "Nome": "Carlos Silva",
-            "E-mail": "carlos****@gmail.com",
-            "Telefone": "(11) 98765-4321",
-            "Campanha": "Campanha Scale Q3",
-            "Valor": "R$ 297,00",
-            "Status": "🟢 Convertido"
-        },
-        {
-            "Horário": "15:42:18",
-            "Nome": "Mariana Souza",
-            "E-mail": "mari****@outlook.com",
-            "Telefone": "(21) 97123-8899",
-            "Campanha": "Campanha Remarketing",
-            "Valor": "R$ 497,00",
-            "Status": "🟢 Convertido"
-        }
-    ]
+    st.session_state.pagina_atual = '📊 Visão Geral'
 
 # ==========================================
-# 2. ESTILIZAÇÃO CSS CUSTOMIZADA
+# 2. ESTILIZAÇÃO CSS CUSTOMIZADA (FORÇANDO FUNDO SÓLIDO EM TUDO)
 # ==========================================
 st.markdown("""
     <style>
@@ -173,11 +151,17 @@ st.markdown("""
             border-bottom: 1px solid #1e293b;
             color: #f8fafc;
         }
+        .action-btn {
+            color: #38bdf8;
+            cursor: pointer;
+            font-weight: 500;
+            margin-right: 8px;
+        }
     </style>
 """, unsafe_allow_html=True)
 
 # ==========================================
-# 3. BARRA DE NAVEGAÇÃO SUPERIOR INTERATIVA
+# 3. BARRA DE NAVEGAÇÃO SUPERIOR INTERATIVA (6 OPÇÕES)
 # ==========================================
 st.markdown('<div class="top-navbar">', unsafe_allow_html=True)
 nav_col1, nav_col2 = st.columns([2, 6])
@@ -221,6 +205,7 @@ if st.session_state.pagina_atual == '📊 Visão Geral':
 
     st.markdown("<br>", unsafe_allow_html=True)
 
+    # Bloco de Métricas
     m1, m2, m3, m4 = st.columns(4)
     with m1:
         st.markdown("""
@@ -251,12 +236,13 @@ if st.session_state.pagina_atual == '📊 Visão Geral':
             <div class="metric-box">
                 <div class="metric-title">[LEADS QUALIFICADOS]</div>
                 <div class="metric-value">452</div>
-                <div class="metric-sub-green">Taxa conv. 4.2%</div>
+                <div class="metric-sub-green">Texa conv. 4.2%</div>
             </div>
         """, unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
 
+    # Seção 1: Gráfico
     with st.container(border=True):
         st.markdown('<div class="block-header">CRESCIMENTO DE VENDAS VS. GASTO</div>', unsafe_allow_html=True)
         df_grafico = pd.DataFrame({
@@ -275,6 +261,53 @@ if st.session_state.pagina_atual == '📊 Visão Geral':
         )
         st.plotly_chart(fig, use_container_width=True)
 
+    # Seção 2: Tabela de Campanhas
+    with st.container(border=True):
+        st.markdown('<div class="block-header">TABELA: PERFORMANCE POR CAMPANHA (Deep Dive)</div>', unsafe_allow_html=True)
+        st.markdown("""
+            <table class="custom-table">
+                <thead>
+                    <tr>
+                        <th>Campanha</th>
+                        <th>Gasto</th>
+                        <th>Cliques</th>
+                        <th>CPA Real</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Campanha A</td>
+                        <td>R$ 500</td>
+                        <td>120</td>
+                        <td>R$ 15,20</td>
+                        <td><span style="color: #22c55e;">🟢 ATIVA</span></td>
+                        <td><span class="action-btn">[Pausar]</span> <span class="action-btn">[Otimizar]</span></td>
+                    </tr>
+                    <tr>
+                        <td>Campanha B</td>
+                        <td>R$ 500</td>
+                        <td>120</td>
+                        <td>R$ 15,20</td>
+                        <td><span style="color: #22c55e;">🟢 ATIVA</span></td>
+                        <td><span class="action-btn">[Pausar]</span> <span class="action-btn">[Otimizar]</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        """, unsafe_allow_html=True)
+
+    # Seção 3: Status da Infraestrutura
+    with st.container(border=True):
+        st.markdown('<div class="block-header">STATUS DA INFRAESTRUTURA TÉCNICA</div>', unsafe_allow_html=True)
+        col_infra1, col_infra2 = st.columns(2)
+        with col_infra1:
+            st.markdown("✅ Pixel Meta Server-Side: <span style='color: #22c55e;'>Sincronizado</span> (Último log: 2s atrás)", unsafe_allow_html=True)
+            st.markdown("✅ API de Conversão Google: <span style='color: #22c55e;'>OK</span>", unsafe_allow_html=True)
+        with col_infra2:
+            st.markdown("✅ Rastreamento de Leads: <span style='color: #22c55e;'>100%</span> (Sem perdas por adblockers)", unsafe_allow_html=True)
+            st.markdown("✅ Webhook Vendas: <span style='color: #22c55e;'>OK</span>", unsafe_allow_html=True)
+
 elif st.session_state.pagina_atual == '🎯 Campanhas':
     with st.container(border=True):
         st.markdown('<div class="block-header">GESTÃO AVANÇADA DE CAMPANHAS</div>', unsafe_allow_html=True)
@@ -284,77 +317,26 @@ elif st.session_state.pagina_atual == '🎯 Campanhas':
 
 elif st.session_state.pagina_atual == '👥 Leads':
     with st.container(border=True):
-        st.markdown('<div class="block-header">👥 GESTÃO E CAPTURA DE DADOS DE USUÁRIOS (LEADS & VENDAS)</div>', unsafe_allow_html=True)
-        st.markdown("<p style='color: #94a3b8; font-size: 13px;'>Visualize e simule em tempo real a captura de dados de clientes (com hashing automático para APIs de Conversão).</p>", unsafe_allow_html=True)
-        
-        # Simulador Interativo de Conversão
-        with st.expander("➕ Simular Nova Conversão / Lead (Teste Front-End)", expanded=False):
-            with st.form("form_simulador_lead"):
-                col_f1, col_f2 = st.columns(2)
-                with col_f1:
-                    nome_input = st.text_input("Nome do Cliente", value="João Pedro")
-                    email_input = st.text_input("E-mail", value="joao.pedro@email.com")
-                with col_f2:
-                    tel_input = st.text_input("Telefone", value="(11) 99888-7766")
-                    campanha_input = st.selectbox("Campanha de Origem", ["Campanha Scale Q3", "Campanha Remarketing", "Campanha Lançamento"])
-                
-                valor_input = st.text_input("Valor da Venda", value="R$ 197,00")
-                
-                submitted = st.form_submit_button("🚀 Simular Envio de Webhook & Captura")
-                if submitted:
-                    novo_lead = {
-                        "Horário": datetime.now().strftime("%H:%M:%S"),
-                        "Nome": nome_input,
-                        "E-mail": email_input[:4] + "****" + email_input[email_input.find("@"):],
-                        "Telefone": tel_input,
-                        "Campanha": campanha_input,
-                        "Valor": valor_input,
-                        "Status": "🟢 Convertido"
-                    }
-                    st.session_state.leads_data.insert(0, novo_lead)
-                    st.success("Conversão simulada e capturada com sucesso pelo Servidor!")
-        
-        st.markdown("<br>", unsafe_allow_html=True)
-        st.markdown("### 📋 Histórico de Leads e Clientes Capturados")
-        
-        # Renderizar tabela dinâmica com base no session_state
-        tabela_html = """
-            <table class="custom-table">
-                <thead>
-                    <tr>
-                        <th>Horário</th>
-                        <th>Nome</th>
-                        <th>E-mail (Masked)</th>
-                        <th>Telefone</th>
-                        <th>Campanha</th>
-                        <th>Valor</th>
-                        <th>Status Servidor</th>
-                    </tr>
-                </thead>
-                <tbody>
-        """
-        for lead in st.session_state.leads_data:
-            tabela_html += f"""
-                    <tr>
-                        <td>{lead['Horário']}</td>
-                        <td>{lead['Nome']}</td>
-                        <td>{lead['E-mail']}</td>
-                        <td>{lead['Telefone']}</td>
-                        <td>{lead['Campanha']}</td>
-                        <td style="color: #22c55e; font-weight: bold;">{lead['Valor']}</td>
-                        <td><span style="color: #22c55e;">{lead['Status']}</span></td>
-                    </tr>
-            """
-        tabela_html += "</tbody></table>"
-        st.markdown(tabela_html, unsafe_allow_html=True)
+        st.markdown('<div class="block-header">QUALIFICAÇÃO E FUNIL DE LEADS</div>', unsafe_allow_html=True)
+        st.markdown("<p style='color: #94a3b8;'>Acompanhamento detalhado de leads capturados sem perdas por adblockers.</p>", unsafe_allow_html=True)
+        st.markdown("- **Total de Leads Capturados**: 452")
+        st.markdown("- **Leads Qualificados (API)**: 380")
+        st.markdown("- **Taxa de Conversão do Funil**: 4.2%")
 
 elif st.session_state.pagina_atual == '🔍 Rastreamento e Logs':
     with st.container(border=True):
         st.markdown('<div class="block-header">FONTE DA VERDADE: LOGS DE CLIQUES E DADOS DE AUDITORIA (SERVER-SIDE)</div>', unsafe_allow_html=True)
         st.markdown("<p style='color: #94a3b8; font-size: 13px;'>Captura absoluta de cada clique, IP, headers, dispositivo e parâmetros UTM para auditoria independente.</p>", unsafe_allow_html=True)
         
+        # Tentativa de capturar cabeçalhos HTTP reais do cliente se disponível no ambiente
         client_ip = "177.185.120.45"
         user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/124.0.0.0"
+        try:
+            if hasattr(st, 'context') and st.context.headers:
+                client_ip = st.context.headers.get("X-Forwarded-For", client_ip)
+                user_agent = st.context.headers.get("User-Agent", user_agent)
+        except Exception:
+            pass
 
         st.markdown(f"""
             <div style='background-color: #0a0e17; border: 1px solid #1e293b; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 12px;'>
@@ -390,6 +372,13 @@ elif st.session_state.pagina_atual == '🔍 Rastreamento e Logs':
                         <td>utm_source=google&utm_medium=search</td>
                         <td><span style="color: #22c55e;">✔ Capturado (Server-Side)</span></td>
                     </tr>
+                    <tr>
+                        <td>16:09:12</td>
+                        <td>179.154.88.10 (PR, BR)</td>
+                        <td>Mobile / Android 14</td>
+                        <td>utm_source=instagram&utm_medium=story</td>
+                        <td><span style="color: #22c55e;">✔ Capturado (Server-Side)</span></td>
+                    </tr>
                 </tbody>
             </table>
         """, unsafe_allow_html=True)
@@ -404,7 +393,7 @@ elif st.session_state.pagina_atual == '📄 Relatórios':
 elif st.session_state.pagina_atual == '⚙️ Configurações':
     with st.container(border=True):
         st.markdown('<div class="block-header">CONFIGURAÇÕES DO ECOSSISTEMA E APIS</div>', unsafe_allow_html=True)
-        st.markdown("<p style='color: #94a3b8;'>Gerenciamento de chaves de API, webhooks e parâmetros avançados de rastreamento.</p>", unsafe_allow_html=True)
+        st.markdown("<p style='color: #94a3b8;'>Gerenciamento de chaves de API, webhooks e parâmetros avançados de rastreamento IP.</p>", unsafe_allow_html=True)
         st.markdown("- **Token API Meta**: `EAAG...sh29` (Conectado)")
         st.markdown("- **Token API Google Ads**: `GGL...91a` (Conectado)")
         st.markdown("- **Endpoint Webhook**: `https://api.ecodata.io/v1/webhook`")
