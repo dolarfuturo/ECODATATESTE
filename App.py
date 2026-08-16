@@ -13,17 +13,48 @@ st.set_page_config(
 )
 
 # ==========================================
-# 2. ESTILIZAÇÃO CSS CUSTOMIZADA (IDÊNTICA À IMAGEM)
+# 2. ESTILIZAÇÃO CSS CUSTOMIZADA (LAYOUT EXATO)
 # ==========================================
 st.markdown("""
     <style>
-        /* Fundo geral da aplicação em tom escuro profundo */
         .stApp {
             background-color: #0a0e17;
             color: #ffffff;
         }
         
-        /* Estilo dos blocos escuros isolados (Cards) */
+        /* Navbar Superior idêntica à imagem */
+        .top-navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #0f172a;
+            padding: 12px 20px;
+            border-bottom: 1px solid #1e293b;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .nav-brand {
+            font-weight: bold;
+            font-size: 16px;
+            color: #38bdf8;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .nav-links {
+            display: flex;
+            gap: 25px;
+            font-size: 14px;
+            color: #94a3b8;
+        }
+        .nav-link-active {
+            color: #38bdf8;
+            border-bottom: 2px solid #38bdf8;
+            padding-bottom: 4px;
+            font-weight: 600;
+        }
+
+        /* Blocos Escuros Isolados por Sessão */
         .dark-card {
             background-color: #121824;
             border: 1px solid #1e293b;
@@ -38,7 +69,6 @@ st.markdown("""
             border: 1px solid #1e293b;
             border-radius: 10px;
             padding: 16px;
-            text-align: left;
         }
         .metric-title {
             font-size: 11px;
@@ -73,7 +103,6 @@ st.markdown("""
             border-radius: 20px;
             font-size: 12px;
             font-weight: bold;
-            display: inline-block;
         }
 
         /* Títulos Internos dos Blocos */
@@ -89,7 +118,25 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# 3. BARRA SUPERIOR (Filtros e Status da Infra)
+# 3. BARRA DE NAVEGAÇÃO SUPERIOR
+# ==========================================
+st.markdown("""
+    <div class="top-navbar">
+        <div class="nav-brand">
+            <span>🌐 ECODATA PERFORMANCE</span>
+        </div>
+        <div class="nav-links">
+            <span class="nav-link-active">📊 Visão Geral</span>
+            <span>🎯 Campanhas</span>
+            <span>👥 Leads</span>
+            <span>📄 Relatórios</span>
+            <span>⚙️ Configurações</span>
+        </div>
+    </div>
+""", unsafe_allow_html=True)
+
+# ==========================================
+# 4. FILTRO DE DATA E STATUS DA INFRA
 # ==========================================
 col_filter, col_status = st.columns([3, 1])
 
@@ -102,7 +149,7 @@ with col_status:
 st.markdown("<br>", unsafe_allow_html=True)
 
 # ==========================================
-# 4. BLOCO 1: MÉTRICAS SUPERIORES (4 Cards)
+# 5. BLOCO DE MÉTRICAS SUPERIORES (Investimento, Faturamento, ROAS, Leads)
 # ==========================================
 m1, m2, m3, m4 = st.columns(4)
 
@@ -145,12 +192,11 @@ with m4:
 st.markdown("<br>", unsafe_allow_html=True)
 
 # ==========================================
-# 5. BLOCO 2: GRÁFICO (Isolado em Card Escuro)
+# 6. SESSÃO 1: CRESCIMENTO DE VENDAS VS. GASTO (Bloco Escuro Exclusivo)
 # ==========================================
 st.markdown('<div class="dark-card">', unsafe_allow_html=True)
 st.markdown('<div class="block-header">CRESCIMENTO DE VENDAS VS. GASTO</div>', unsafe_allow_html=True)
 
-# Dados idênticos à proporção da imagem
 df_grafico = pd.DataFrame({
     'Dia': ['00:00h', '01:00h', '16:00h', '17:00h', '18:00h', '19:00h', '20:00h', '23:00h', '30 dias'],
     'Vendas': [1000, 2200, 3800, 4100, 5600, 6000, 5200, 7100, 1400],
@@ -170,7 +216,7 @@ st.plotly_chart(fig, use_container_width=True)
 st.markdown('</div>', unsafe_allow_html=True)
 
 # ==========================================
-# 6. BLOCO 3: TABELA DE PERFORMANCE (Isolado em Card Escuro)
+# 7. SESSÃO 2: TABELA DE PERFORMANCE POR CAMPANHA (Bloco Escuro Exclusivo)
 # ==========================================
 st.markdown('<div class="dark-card">', unsafe_allow_html=True)
 st.markdown('<div class="block-header">TABELA: PERFORMANCE POR CAMPANHA (Deep Dive)</div>', unsafe_allow_html=True)
@@ -181,22 +227,22 @@ df_campanhas = pd.DataFrame({
     'Cliques': [120, 120],
     'CPA Real': ['R$ 15,20', 'R$ 15,20'],
     'Status': ['🟢 ATIVA', '🟢 ATIVA'],
-    'Ações': ['[Pausar] [Otimizar]', '[Pausar] [Otimiazer]']
+    'Ações': ['[Pausar] [Otimizar]', '[Pausar] [Otimizar]']
 })
 
 st.dataframe(df_campanhas, use_container_width=True, hide_index=True)
 st.markdown('</div>', unsafe_allow_html=True)
 
 # ==========================================
-# 7. BLOCO 4: STATUS DA INFRAESTRUTURA (Isolado em Card Escuro)
+# 8. SESSÃO 3: STATUS DA INFRAESTRUTURA TÉCNICA (Bloco Escuro Exclusivo)
 # ==========================================
 st.markdown('<div class="dark-card">', unsafe_allow_html=True)
 st.markdown('<div class="block-header">STATUS DA INFRAESTRUTURA TÉCNICA</div>', unsafe_allow_html=True)
 
 col_infra1, col_infra2 = st.columns(2)
 with col_infra1:
-    st.markdown("✅ Pizel Meta Server-Side: <span style='color: #22c55e;'>Sincronizado</span> (Último log: 2s atiós)", unsafe_allow_html=True)
-    st.markdown("✅ API de Cenversão Google: <span style='color: #22c55e;'>OK</span>", unsafe_allow_html=True)
+    st.markdown("✅ Pizel Meta Server-Side: <span style='color: #22c55e;'>Sincronizado</span> (Último log: 2s atrás)", unsafe_allow_html=True)
+    st.markdown("✅ API de Conversão Google: <span style='color: #22c55e;'>OK</span>", unsafe_allow_html=True)
 
 with col_infra2:
     st.markdown("✅ Rastreamento de Leads: <span style='color: #22c55e;'>100%</span> (Sem perdas por adblockers)", unsafe_allow_html=True)
