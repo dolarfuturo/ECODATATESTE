@@ -13,7 +13,7 @@ st.set_page_config(
 )
 
 # ==========================================
-# 2. ESTILIZAÇÃO CSS CUSTOMIZADA (PREENCHIMENTO TOTAL DOS BLOCOS)
+# 2. ESTILIZAÇÃO CSS CUSTOMIZADA (PREENCHIMENTO TOTAL E UNIFICADO)
 # ==========================================
 st.markdown("""
     <style>
@@ -54,15 +54,21 @@ st.markdown("""
             font-weight: 600;
         }
 
-        /* Preenchimento sólido e borda dos 3 grandes blocos */
+        /* Forçar fundo sólido #121824 de ponta a ponta em todos os 3 blocos grandes */
         div[data-testid="stVerticalBlockBorderWrapper"] {
             background-color: #121824 !important;
             border: 1px solid #1e293b !important;
             border-radius: 12px !important;
-            padding: 15px !important;
+            padding: 16px !important;
             margin-bottom: 20px !important;
         }
-        div[data-testid="stVerticalBlockBorderWrapper"] div {
+
+        /* Neutralizar qualquer fundo interno padrão do Streamlit dentro dos blocos */
+        div[data-testid="stVerticalBlockBorderWrapper"] div,
+        div[data-testid="stVerticalBlockBorderWrapper"] section,
+        div[data-testid="stVerticalBlockBorderWrapper"] [data-testid="stVerticalBlock"],
+        div[data-testid="stVerticalBlockBorderWrapper"] [data-testid="stHorizontalBlock"],
+        [data-testid="stDataFrame"] {
             background-color: transparent !important;
         }
 
@@ -195,7 +201,7 @@ with m4:
 st.markdown("<br>", unsafe_allow_html=True)
 
 # ==========================================
-# 6. SESSÃO 1: CRESCIMENTO DE VENDAS VS. GASTO (Com preenchimento sólido)
+# 6. SESSÃO 1: CRESCIMENTO DE VENDAS VS. GASTO
 # ==========================================
 with st.container(border=True):
     st.markdown('<div class="block-header">CRESCIMENTO DE VENDAS VS. GASTO</div>', unsafe_allow_html=True)
@@ -218,7 +224,7 @@ with st.container(border=True):
     st.plotly_chart(fig, use_container_width=True)
 
 # ==========================================
-# 7. SESSÃO 2: TABELA DE PERFORMANCE POR CAMPANHA (Com preenchimento sólido)
+# 7. SESSÃO 2: TABELA DE PERFORMANCE POR CAMPANHA
 # ==========================================
 with st.container(border=True):
     st.markdown('<div class="block-header">TABELA: PERFORMANCE POR CAMPANHA (Deep Dive)</div>', unsafe_allow_html=True)
@@ -235,7 +241,7 @@ with st.container(border=True):
     st.dataframe(df_campanhas, use_container_width=True, hide_index=True)
 
 # ==========================================
-# 8. SESSÃO 3: STATUS DA INFRAESTRUTURA TÉCNICA (Com preenchimento sólido)
+# 8. SESSÃO 3: STATUS DA INFRAESTRUTURA TÉCNICA
 # ==========================================
 with st.container(border=True):
     st.markdown('<div class="block-header">STATUS DA INFRAESTRUTURA TÉCNICA</div>', unsafe_allow_html=True)
