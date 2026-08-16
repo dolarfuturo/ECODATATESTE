@@ -1,6 +1,7 @@
 import streamlit as st
 import plotly.express as px
 import pandas as pd
+from datetime import datetime
 
 # ==========================================
 # 1. CONFIGURAÇÃO GLOBAL DA PÁGINA
@@ -51,10 +52,10 @@ st.markdown("""
             background-color: transparent !important;
             border: none !important;
             color: #94a3b8 !important;
-            font-size: 14px !important;
+            font-size: 13px !important;
             font-weight: 500 !important;
             text-align: left !important;
-            padding: 4px 8px !important;
+            padding: 4px 6px !important;
             box-shadow: none !important;
         }
         [data-testid="stHorizontalBlock"] button:hover {
@@ -160,40 +161,42 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# 3. BARRA DE NAVEGAÇÃO SUPERIOR INTERATIVA
+# 3. BARRA DE NAVEGAÇÃO SUPERIOR INTERATIVA (6 OPÇÕES)
 # ==========================================
 st.markdown('<div class="top-navbar">', unsafe_allow_html=True)
-nav_col1, nav_col2 = st.columns([2, 5])
+nav_col1, nav_col2 = st.columns([2, 6])
 
 with nav_col1:
     st.markdown('<div class="nav-brand"><span>🌐 ECODATA PERFORMANCE</span></div>', unsafe_allow_html=True)
 
 with nav_col2:
-    b1, b2, b3, b4, b5 = st.columns(5)
+    b1, b2, b3, b4, b5, b6 = st.columns(6)
     with b1:
-        if st.button("📊 Visão Geral", use_container_width=True):
+        if st.button("📊 Visão", use_container_width=True):
             st.session_state.pagina_atual = '📊 Visão Geral'
     with b2:
-        if st.button("🎯 Campanhas", use_container_width=True):
+        if st.button("🎯 Camp", use_container_width=True):
             st.session_state.pagina_atual = '🎯 Campanhas'
     with b3:
         if st.button("👥 Leads", use_container_width=True):
             st.session_state.pagina_atual = '👥 Leads'
     with b4:
-        if st.button("📄 Relatórios", use_container_width=True):
-            st.session_state.pagina_atual = '📄 Relatórios'
+        if st.button("🔍 Logs", use_container_width=True):
+            st.session_state.pagina_atual = '🔍 Rastreamento e Logs'
     with b5:
-        if st.button("⚙️ Configurações", use_container_width=True):
+        if st.button("📄 Relat", use_container_width=True):
+            st.session_state.pagina_atual = '📄 Relatórios'
+    with b6:
+        if st.button("⚙️ Config", use_container_width=True):
             st.session_state.pagina_atual = '⚙️ Configurações'
 
 st.markdown('</div>', unsafe_allow_html=True)
 
 # ==========================================
-# 4. CONTEÚDO DINÂMICO BASEADO NA PÁGINA SELECIONADA
+# 4. CONTEÚDO DINÂMICO DA APLICAÇÃO
 # ==========================================
 
 if st.session_state.pagina_atual == '📊 Visão Geral':
-    # Filtro e Status
     col_filter, col_status = st.columns([3, 1])
     with col_filter:
         st.markdown("<span style='color: #94a3b8; font-size: 13px;'>Filtro de Data:</span> &nbsp;&nbsp; `[ Últimos 30 Dias ▾ ]`", unsafe_allow_html=True)
@@ -202,7 +205,7 @@ if st.session_state.pagina_atual == '📊 Visão Geral':
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # Bloco de Métricas Superiores
+    # Bloco de Métricas
     m1, m2, m3, m4 = st.columns(4)
     with m1:
         st.markdown("""
@@ -233,7 +236,7 @@ if st.session_state.pagina_atual == '📊 Visão Geral':
             <div class="metric-box">
                 <div class="metric-title">[LEADS QUALIFICADOS]</div>
                 <div class="metric-value">452</div>
-                <div class="metric-sub-green">Taxa conv. 4.2%</div>
+                <div class="metric-sub-green">Texa conv. 4.2%</div>
             </div>
         """, unsafe_allow_html=True)
 
@@ -258,7 +261,7 @@ if st.session_state.pagina_atual == '📊 Visão Geral':
         )
         st.plotly_chart(fig, use_container_width=True)
 
-    # Seção 2: Tabela
+    # Seção 2: Tabela de Campanhas
     with st.container(border=True):
         st.markdown('<div class="block-header">TABELA: PERFORMANCE POR CAMPANHA (Deep Dive)</div>', unsafe_allow_html=True)
         st.markdown("""
@@ -308,30 +311,89 @@ if st.session_state.pagina_atual == '📊 Visão Geral':
 elif st.session_state.pagina_atual == '🎯 Campanhas':
     with st.container(border=True):
         st.markdown('<div class="block-header">GESTÃO AVANÇADA DE CAMPANHAS</div>', unsafe_allow_html=True)
-        st.markdown("<p style='color: #94a3b8;'>Aqui você gerencia campanhas ativas, define orçamentos automatizados e otimiza o ROAS via Server-Side.</p>", unsafe_allow_html=True)
-        st.markdown("### Campanhas em Execução", unsafe_allow_html=True)
+        st.markdown("<p style='color: #94a3b8;'>Gerenciamento de campanhas ativas com dados auditados em tempo real.</p>", unsafe_allow_html=True)
         st.markdown("- **Campanha Scale Q3**: Investimento R$ 8.500,00 | Retorno R$ 28.100,00 | ROAS 3.3x")
         st.markdown("- **Campanha Remarketing**: Investimento R$ 3.500,00 | Retorno R$ 12.400,00 | ROAS 3.5x")
 
 elif st.session_state.pagina_atual == '👥 Leads':
     with st.container(border=True):
         st.markdown('<div class="block-header">QUALIFICAÇÃO E FUNIL DE LEADS</div>', unsafe_allow_html=True)
-        st.markdown("<p style='color: #94a3b8;'>Acompanhamento de leads capturados sem perdas por adblockers e pontuação de qualificação automática.</p>", unsafe_allow_html=True)
+        st.markdown("<p style='color: #94a3b8;'>Acompanhamento detalhado de leads capturados sem perdas por adblockers.</p>", unsafe_allow_html=True)
         st.markdown("- **Total de Leads Capturados**: 452")
         st.markdown("- **Leads Qualificados (API)**: 380")
         st.markdown("- **Taxa de Conversão do Funil**: 4.2%")
+
+elif st.session_state.pagina_atual == '🔍 Rastreamento e Logs':
+    with st.container(border=True):
+        st.markdown('<div class="block-header">FONTE DA VERDADE: LOGS DE CLIQUES E DADOS DE AUDITORIA (SERVER-SIDE)</div>', unsafe_allow_html=True)
+        st.markdown("<p style='color: #94a3b8; font-size: 13px;'>Captura absoluta de cada clique, IP, headers, dispositivo e parâmetros UTM para auditoria independente.</p>", unsafe_allow_html=True)
+        
+        # Tentativa de capturar cabeçalhos HTTP reais do cliente se disponível no ambiente
+        client_ip = "177.185.120.45"
+        user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/124.0.0.0"
+        try:
+            if hasattr(st, 'context') and st.context.headers:
+                client_ip = st.context.headers.get("X-Forwarded-For", client_ip)
+                user_agent = st.context.headers.get("User-Agent", user_agent)
+        except Exception:
+            pass
+
+        st.markdown(f"""
+            <div style='background-color: #0a0e17; border: 1px solid #1e293b; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 12px;'>
+                🌐 <b>Sua Conexão Atual detectada pelo Servidor:</b><br>
+                • <b>IP de Origem:</b> <span style='color: #38bdf8;'>{client_ip}</span><br>
+                • <b>User-Agent:</b> <span style='color: #22c55e;'>{user_agent}</span>
+            </div>
+        """, unsafe_allow_html=True)
+
+        st.markdown("""
+            <table class="custom-table">
+                <thead>
+                    <tr>
+                        <th>Horário</th>
+                        <th>IP / Origem</th>
+                        <th>Dispositivo / OS</th>
+                        <th>UTM Campaign</th>
+                        <th>Status Evento</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>16:11:02</td>
+                        <td>187.12.44.192 (SP, BR)</td>
+                        <td>Mobile / iOS 17.5</td>
+                        <td>utm_source=facebook&utm_medium=cpc</td>
+                        <td><span style="color: #22c55e;">✔ Capturado (Server-Side)</span></td>
+                    </tr>
+                    <tr>
+                        <td>16:10:45</td>
+                        <td>201.88.13.90 (RJ, BR)</td>
+                        <td>Desktop / Windows 11</td>
+                        <td>utm_source=google&utm_medium=search</td>
+                        <td><span style="color: #22c55e;">✔ Capturado (Server-Side)</span></td>
+                    </tr>
+                    <tr>
+                        <td>16:09:12</td>
+                        <td>179.154.88.10 (PR, BR)</td>
+                        <td>Mobile / Android 14</td>
+                        <td>utm_source=instagram&utm_medium=story</td>
+                        <td><span style="color: #22c55e;">✔ Capturado (Server-Side)</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        """, unsafe_allow_html=True)
 
 elif st.session_state.pagina_atual == '📄 Relatórios':
     with st.container(border=True):
         st.markdown('<div class="block-header">RELATÓRIOS E AUDITORIA DE DADOS</div>', unsafe_allow_html=True)
         st.markdown("<p style='color: #94a3b8;'>Geração de relatórios independentes baseados na fonte da verdade server-side.</p>", unsafe_allow_html=True)
         st.markdown("- 📥 Baixar Relatório Consolidado de Vendas (CSV)")
-        st.markdown("- 📥 Exportar Logs de Auditoria de API (JSON)")
+        st.markdown("- 📥 Exportar Logs de Auditoria de IP e Cliques (JSON)")
 
 elif st.session_state.pagina_atual == '⚙️ Configurações':
     with st.container(border=True):
         st.markdown('<div class="block-header">CONFIGURAÇÕES DO ECOSSISTEMA E APIS</div>', unsafe_allow_html=True)
-        st.markdown("<p style='color: #94a3b8;'>Gerenciamento de chaves de API, webhooks e integração com servidores de rastreamento.</p>", unsafe_allow_html=True)
+        st.markdown("<p style='color: #94a3b8;'>Gerenciamento de chaves de API, webhooks e parâmetros avançados de rastreamento IP.</p>", unsafe_allow_html=True)
         st.markdown("- **Token API Meta**: `EAAG...sh29` (Conectado)")
         st.markdown("- **Token API Google Ads**: `GGL...91a` (Conectado)")
         st.markdown("- **Endpoint Webhook**: `https://api.ecodata.io/v1/webhook`")
