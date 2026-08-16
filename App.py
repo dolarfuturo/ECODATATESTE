@@ -16,6 +16,9 @@ st.set_page_config(
 if 'pagina_atual' not in st.session_state:
     st.session_state.pagina_atual = '📊 Visão Geral'
 
+if 'investimento_total' not in st.session_state:
+    st.session_state.investimento_total = 15400.0
+
 if 'campanhas_cadastradas' not in st.session_state:
     st.session_state.campanhas_cadastradas = ["Campanha Scale Q3", "Campanha Remarketing"]
 
@@ -78,8 +81,12 @@ def calcular_faturamento():
     total = calcular_faturamento_numerico()
     return f"R$ {total:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
 
+def calcular_investimento():
+    inv = st.session_state.investimento_total
+    return f"R$ {inv:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+
 def calcular_roas():
-    investimento_total = 15400.0
+    investimento_total = st.session_state.investimento_total
     faturamento = calcular_faturamento_numerico()
     if investimento_total > 0:
         roas_val = faturamento / investimento_total
@@ -278,11 +285,11 @@ if st.session_state.pagina_atual == '📊 Visão Geral':
     # Bloco de Métricas
     m1, m2, m3, m4 = st.columns(4)
     with m1:
-        st.markdown("""
+        st.markdown(f"""
             <div class="metric-box">
                 <div class="metric-title">[INVESTIMENTO]</div>
-                <div class="metric-value">R$ 15.400,00</div>
-                <div class="metric-sub-green">▲ 12%</div>
+                <div class="metric-value">{calcular_investimento()}</div>
+                <div class="metric-sub-green">Atualizado</div>
             </div>
         """, unsafe_allow_html=True)
     with m2:
@@ -333,7 +340,7 @@ if st.session_state.pagina_atual == '📊 Visão Geral':
             
             valores_vendas = []
             acumulado_vendas = 0.0
-            total_investimento_base = 15400.0
+            total_investimento_base = st.session_state.investimento_total
             n_pontos = len(df_leads_sorted)
             valores_gasto = []
             
@@ -536,9 +543,10 @@ elif st.session_state.pagina_atual == '🔍 Rastreamento e Logs':
 elif st.session_state.pagina_atual == '📄 Relatórios':
     with st.container(border=True):
         st.markdown('<div class="block-header">RELATÓRIOS E AUDITORIA DE DADOS</div>', unsafe_allow_html=True)
-        st.markdown(f"- Total de Conversões Registradas: **{len(st.session_state.leads_data)}**")
+        st.markdown(f"- Investimento Total: **{calcular_investimento()}**")
         st.markdown(f"- Faturamento Consolidado: **{calcular_faturamento()}**")
         st.markdown(f"- ROAS Atual: **{calcular_roas()}**")
+        st.markdown(f"- Total de Conversões Registradas: **{len(st.session_state.leads_data)}**")
         
         st.markdown("<br>", unsafe_allow_html=True)
         st.markdown("### 📥 Exportar Dados")
@@ -559,3 +567,12 @@ elif st.session_state.pagina_atual == '⚙️ Configurações':
     with st.container(border=True):
         st.markdown('<div class="block-header">CONFIGURAÇÕES DO ECOSSISTEMA E APIS</div>', unsafe_allow_html=True)
         st.markdown("Status da Conexão Server-Side: <span style='color: #22c55e;'>Ativa e Sincronizada com o banco de sessão em tempo real.</span>", unsafe_allow_html=True)
+        
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown("### 💰 Configuração do Valor de Investimento (Tráfego Pago)")
+        with st.form("form_config_investimento"):
+            novo_inv = st.number_input("Valor total investido (R$)", value=float(st.session_state.investimento_total), step=100.0, format="%.2f")
+            if st.form_submit_button("💾 Atualizar Investimento"):
+                st.session_state.investimento_total = novo_inv
+                st.success("Investimento atualizado com sucesso! As métricas de ROAS e gráficos foram recalculados.")
+                st.rerun()
