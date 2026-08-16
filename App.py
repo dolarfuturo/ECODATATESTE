@@ -22,6 +22,7 @@ if 'campanhas_cadastradas' not in st.session_state:
 if 'leads_data' not in st.session_state:
     st.session_state.leads_data = [
         {
+            "Data": "16/08/2026",
             "Horário": "16:11:02",
             "Nome": "Carlos Silva",
             "E-mail": "carlos****@gmail.com",
@@ -31,6 +32,7 @@ if 'leads_data' not in st.session_state:
             "Status": "🟢 Convertido"
         },
         {
+            "Data": "16/08/2026",
             "Horário": "15:42:18",
             "Nome": "Mariana Souza",
             "E-mail": "mari****@outlook.com",
@@ -326,8 +328,8 @@ if st.session_state.pagina_atual == '📊 Visão Geral':
         st.markdown('<div class="block-header">EVOLUÇÃO EM DUAS LINHAS: FATURAMENTO VS. INVESTIMENTO</div>', unsafe_allow_html=True)
         
         if len(st.session_state.leads_data) > 0:
-            df_leads_sorted = sorted(st.session_state.leads_data, key=lambda x: x['Horário'])
-            horarios = [item['Horário'] for item in df_leads_sorted]
+            df_leads_sorted = sorted(st.session_state.leads_data, key=lambda x: (x.get('Data', ''), x['Horário']))
+            horarios = [f"{item.get('Data', '')} {item['Horário']}" for item in df_leads_sorted]
             
             valores_vendas = []
             acumulado_vendas = 0.0
@@ -348,15 +350,15 @@ if st.session_state.pagina_atual == '📊 Visão Geral':
                 valores_gasto.append(gasto_acumulado)
             
             df_grafico = pd.DataFrame({
-                'Horário': horarios,
+                'Data/Horário': horarios,
                 'Faturamento': valores_vendas,
                 'Investimento': valores_gasto
             })
             
-            fig = px.line(df_grafico, x='Horário', y=['Faturamento', 'Investimento'], markers=True)
+            fig = px.line(df_grafico, x='Data/Horário', y=['Faturamento', 'Investimento'], markers=True)
         else:
-            df_grafico = pd.DataFrame({'Horário': [], 'Faturamento': [], 'Investimento': []})
-            fig = px.line(df_grafico, x='Horário', y=['Faturamento', 'Investimento'])
+            df_grafico = pd.DataFrame({'Data/Horário': [], 'Faturamento': [], 'Investimento': []})
+            fig = px.line(df_grafico, x='Data/Horário', y=['Faturamento', 'Investimento'])
 
         fig.update_layout(
             template="plotly_dark",
@@ -425,17 +427,49 @@ elif st.session_state.pagina_atual == '🎯 Campanhas':
         
         with col_c2:
             st.subheader("🔗 Gerador de Link UTM")
-            camp_selecionada = st.selectbox("Escolha a campanha:", st.session_state.campanhas_cadastradas)
-            url_base = st.text_input("URL do seu site (destino):", "https://seu-dominio.com.br")
-            
-            utm_link = f"{url_base}/?utm_source=ads&utm_campaign={camp_selecionada.lower().replace(' ', '_')}"
-            st.code(utm_link, language="text")
-            st.info("Copie este link e cole no seu gerenciador de anúncios.")
+            if len(st.session_state.campanhas_cadastradas) > 0:
+                camp_selecionada = st.selectbox("Escolha a campanha:", st.session_state.campanhas_cadastradas)
+                url_base = st.text_input("URL do seu site (destino):", "https://seu-dominio.com.br")
+                
+                utm_link = f"{url_base}/?utm_source=ads&utm_campaign={camp_selecionada.lower().replace(' ', '_')}"
+                st.code(utm_link, language="text")
+                st.info("Copie este link e cole no seu gerenciador de anúncios.")
+            else:
+                st.warning("Cadastre uma campanha primeiro para gerar o link.")
 
         st.markdown("<br>", unsafe_allow_html=True)
-        st.markdown("### 📋 Campanhas Ativas no Sistema")
-        for camp in st.session_state.campanhas_cadastradas:
-            st.markdown(f"- **{camp}** | Status: <span style='color: #22c55e;'>🟢 ATIVA</span>", unsafe_allow_html=True)
+        st.markdown("### ✏️ Editar ou Deletar Campanhas Existentes")
+        
+        if len(st.session_state.campanhas_cadastradas) > 0:
+            camp_para_gerenciar = st.selectbox("Selecione a campanha para gerenciar:", st.session_state.campanhas_cadastradas, key="sel_gerenciar_camp")
+            
+            col_ed1, col_ed2 = st.columns(2)
+            with col_ed1:
+                with st.form("form_editar_campanha"):
+                    novo_nome_camp = st.text_input("Novo nome para a campanha", value=camp_para_gerenciar)
+                    btn_salvar = st.form_submit_button("💾 Salvar Alteração de Nome")
+                    if btn_salvar:
+                        if novo_nome_camp and novo_nome_camp not in st.session_state.campanhas_cadastradas:
+                            idx = st.session_state.campanhas_cadastradas.index(camp_para_gerenciar)
+                            st.session_state.campanhas_cadastradas[idx] = novo_nome_camp
+                            for lead in st.session_state.leads_data:
+                                if lead['Campanha'] == camp_para_gerenciar:
+                                    lead['Campanha'] = novo_nome_camp
+                            st.success("Campanha atualizada com sucesso!")
+                            st.rerun()
+                        else:
+                            st.warning("Nome inválido ou já existente.")
+            with col_ed2:
+                st.markdown("<br>", unsafe_allow_html=True)
+                if st.button("🗑️ Deletar Campanha Selecionada", type="primary"):
+                    if len(st.session_state.campanhas_cadastradas) > 1:
+                        st.session_state.campanhas_cadastradas.remove(camp_para_gerenciar)
+                        st.success("Campanha removida com sucesso!")
+                        st.rerun()
+                    else:
+                        st.warning("O ecossistema precisa ter pelo menos uma campanha ativa.")
+        else:
+            st.info("Nenhuma campanha cadastrada no momento.")
 
 elif st.session_state.pagina_atual == '👥 Leads':
     with st.container(border=True):
@@ -455,8 +489,10 @@ elif st.session_state.pagina_atual == '👥 Leads':
                 
                 submitted = st.form_submit_button("🚀 Simular Envio de Webhook & Captura")
                 if submitted:
+                    data_atual = datetime.now().strftime("%d/%m/%Y")
                     horario_atual = datetime.now().strftime("%H:%M:%S")
                     novo_lead = {
+                        "Data": data_atual,
                         "Horário": horario_atual,
                         "Nome": nome_input,
                         "E-mail": email_input[:4] + "****" + email_input[email_input.find("@"):],
@@ -480,9 +516,10 @@ elif st.session_state.pagina_atual == '👥 Leads':
         st.markdown("<br>", unsafe_allow_html=True)
         st.markdown("### 📋 Histórico de Leads e Clientes Capturados")
         
-        tabela_html = '<table class="custom-table"><thead><tr><th>Horário</th><th>Nome</th><th>E-mail</th><th>Telefone</th><th>Campanha</th><th>Valor</th><th>Status</th></tr></thead><tbody>'
+        tabela_html = '<table class="custom-table"><thead><tr><th>Data</th><th>Horário</th><th>Nome</th><th>E-mail</th><th>Telefone</th><th>Campanha</th><th>Valor</th><th>Status</th></tr></thead><tbody>'
         for lead in st.session_state.leads_data:
-            tabela_html += f'<tr><td>{lead["Horário"]}</td><td>{lead["Nome"]}</td><td>{lead["E-mail"]}</td><td>{lead["Telefone"]}</td><td>{lead["Campanha"]}</td><td style="color: #22c55e; font-weight: bold;">{lead["Valor"]}</td><td><span style="color: #22c55e;">{lead["Status"]}</span></td></tr>'
+            data_lead = lead.get("Data", "16/08/2026")
+            tabela_html += f'<tr><td>{data_lead}</td><td>{lead["Horário"]}</td><td>{lead["Nome"]}</td><td>{lead["E-mail"]}</td><td>{lead["Telefone"]}</td><td>{lead["Campanha"]}</td><td style="color: #22c55e; font-weight: bold;">{lead["Valor"]}</td><td><span style="color: #22c55e;">{lead["Status"]}</span></td></tr>'
         tabela_html += '</tbody></table>'
         st.markdown(tabela_html, unsafe_allow_html=True)
 
