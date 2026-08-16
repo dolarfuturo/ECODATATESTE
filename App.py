@@ -326,33 +326,42 @@ if st.session_state.pagina_atual == '📊 Visão Geral':
         tabela_camp += '</tbody></table>'
         st.markdown(tabela_camp, unsafe_allow_html=True)
 
-    # GRÁFICO EM LINHA 100% DINÂMICO (EVOLUÇÃO ACUMULADA)
+    # GRÁFICO EM DUAS LINHAS (FATURAMENTO VS INVESTIMENTO) 100% DINÂMICO
     with st.container(border=True):
-        st.markdown('<div class="block-header">EVOLUÇÃO EM LINHA: FATURAMENTO ACUMULADO</div>', unsafe_allow_html=True)
+        st.markdown('<div class="block-header">EVOLUÇÃO EM DUAS LINHAS: FATURAMENTO VS. INVESTIMENTO</div>', unsafe_allow_html=True)
         
         if len(st.session_state.leads_data) > 0:
             df_leads_sorted = sorted(st.session_state.leads_data, key=lambda x: x['Horário'])
             horarios = [item['Horário'] for item in df_leads_sorted]
-            valores_num = []
-            acumulado = 0.0
-            for item in df_leads_sorted:
+            
+            valores_vendas = []
+            acumulado_vendas = 0.0
+            total_investimento_base = 15400.0
+            n_pontos = len(df_leads_sorted)
+            valores_gasto = []
+            
+            for i, item in enumerate(df_leads_sorted):
                 v_str = item['Valor'].replace('R$', '').replace('.', '').replace(',', '.').strip()
                 try:
                     val = float(v_str)
                 except:
                     val = 0.0
-                acumulado += val
-                valores_num.append(acumulado)
+                acumulado_vendas += val
+                valores_vendas.append(acumulado_vendas)
+                
+                gasto_acumulado = total_investimento_base * ((i + 1) / n_pontos) if n_pontos > 0 else 0.0
+                valores_gasto.append(gasto_acumulado)
             
             df_grafico = pd.DataFrame({
                 'Horário': horarios,
-                'Faturamento Acumulado (R$)': valores_num
+                'Faturamento': valores_vendas,
+                'Investimento': valores_gasto
             })
             
-            fig = px.line(df_grafico, x='Horário', y='Faturamento Acumulado (R$)', markers=True)
+            fig = px.line(df_grafico, x='Horário', y=['Faturamento', 'Investimento'], markers=True)
         else:
-            df_grafico = pd.DataFrame({'Horário': [], 'Faturamento Acumulado (R$)': []})
-            fig = px.line(df_grafico, x='Horário', y='Faturamento Acumulado (R$)')
+            df_grafico = pd.DataFrame({'Horário': [], 'Faturamento': [], 'Investimento': []})
+            fig = px.line(df_grafico, x='Horário', y=['Faturamento', 'Investimento'])
 
         fig.update_layout(
             template="plotly_dark",
@@ -438,7 +447,6 @@ elif st.session_state.pagina_atual == '👥 Leads':
                     }
                     st.session_state.leads_data.insert(0, novo_lead)
                     
-                    # Adicionar log dinamicamente na aba de rastreamento
                     novo_log = {
                         "Horário": horario_atual,
                         "IP": "191.240.12.89",
@@ -472,25 +480,4 @@ elif st.session_state.pagina_atual == '📄 Relatórios':
     with st.container(border=True):
         st.markdown('<div class="block-header">RELATÓRIOS E AUDITORIA DE DADOS</div>', unsafe_allow_html=True)
         st.markdown(f"- Total de Conversões Registradas: **{len(st.session_state.leads_data)}**")
-        st.markdown(f"- Faturamento Consolidado: **{calcular_faturamento()}**")
-        st.markdown(f"- ROAS Atual: **{calcular_roas()}**")
-        
-        st.markdown("<br>", unsafe_allow_html=True)
-        st.markdown("### 📥 Exportar Dados")
-        
-        if len(st.session_state.leads_data) > 0:
-            df_export = pd.DataFrame(st.session_state.leads_data)
-            csv_data = df_export.to_csv(index=False).encode('utf-8')
-            st.download_button(
-                label="📄 Baixar Relatório Completo de Leads (CSV)",
-                data=csv_data,
-                file_name="relatorio_leads_ecodata.csv",
-                mime="text/csv"
-            )
-        else:
-            st.info("Nenhum dado disponível para exportação no momento.")
-
-elif st.session_state.pagina_atual == '⚙️ Configurações':
-    with st.container(border=True):
-        st.markdown('<div class="block-header">CONFIGURAÇÕES DO ECOSSISTEMA E APIS</div>', unsafe_allow_html=True)
-        st.markdown("Status da Conexão Server-Side: <span style='color: #22c55e;'>Ativa e Sincronizada com o banco de sessão em tempo real.</span>", unsafe_allow_html=True)
+        st.markdown(f"- Faturamento Consolidado: **{calcular_fa
