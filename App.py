@@ -13,7 +13,7 @@ st.set_page_config(
 )
 
 # ==========================================
-# 2. ESTILIZAÇÃO CSS CUSTOMIZADA (LAYOUT EXATO)
+# 2. ESTILIZAÇÃO CSS CUSTOMIZADA (SESSÕES EM BLOCOS)
 # ==========================================
 st.markdown("""
     <style>
@@ -22,7 +22,7 @@ st.markdown("""
             color: #ffffff;
         }
         
-        /* Navbar Superior idêntica à imagem */
+        /* Navbar Superior */
         .top-navbar {
             display: flex;
             justify-content: space-between;
@@ -54,7 +54,7 @@ st.markdown("""
             font-weight: 600;
         }
 
-        /* Blocos Escuros Isolados por Sessão */
+        /* Blocos Escuros Isolados por Sessão (Exatamente como nos riscos da imagem) */
         .dark-card {
             background-color: #121824;
             border: 1px solid #1e293b;
@@ -192,7 +192,7 @@ with m4:
 st.markdown("<br>", unsafe_allow_html=True)
 
 # ==========================================
-# 6. SESSÃO 1: CRESCIMENTO DE VENDAS VS. GASTO (Bloco Escuro Exclusivo)
+# 6. SESSÃO 1: CRESCIMENTO DE VENDAS VS. GASTO (Bloco 1)
 # ==========================================
 st.markdown('<div class="dark-card">', unsafe_allow_html=True)
 st.markdown('<div class="block-header">CRESCIMENTO DE VENDAS VS. GASTO</div>', unsafe_allow_html=True)
@@ -216,7 +216,7 @@ st.plotly_chart(fig, use_container_width=True)
 st.markdown('</div>', unsafe_allow_html=True)
 
 # ==========================================
-# 7. SESSÃO 2: TABELA DE PERFORMANCE POR CAMPANHA (Bloco Escuro Exclusivo)
+# 7. SESSÃO 2: TABELA DE PERFORMANCE POR CAMPANHA (Bloco 2)
 # ==========================================
 st.markdown('<div class="dark-card">', unsafe_allow_html=True)
 st.markdown('<div class="block-header">TABELA: PERFORMANCE POR CAMPANHA (Deep Dive)</div>', unsafe_allow_html=True)
@@ -234,7 +234,7 @@ st.dataframe(df_campanhas, use_container_width=True, hide_index=True)
 st.markdown('</div>', unsafe_allow_html=True)
 
 # ==========================================
-# 8. SESSÃO 3: STATUS DA INFRAESTRUTURA TÉCNICA (Bloco Escuro Exclusivo)
+# 8. SESSÃO 3: STATUS DA INFRAESTRUTURA TÉCNICA (Bloco 3)
 # ==========================================
 st.markdown('<div class="dark-card">', unsafe_allow_html=True)
 st.markdown('<div class="block-header">STATUS DA INFRAESTRUTURA TÉCNICA</div>', unsafe_allow_html=True)
