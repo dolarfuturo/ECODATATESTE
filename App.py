@@ -1,6 +1,6 @@
 import streamlit as st
-import pandas as pd
 import plotly.express as px
+import pandas as pd
 
 # ==========================================
 # 1. CONFIGURAÇÃO GLOBAL DA PÁGINA
@@ -13,7 +13,7 @@ st.set_page_config(
 )
 
 # ==========================================
-# 2. ESTILIZAÇÃO CSS CUSTOMIZADA (FORÇANDO O PREENCHIMENTO EM TODOS OS BLOCOS)
+# 2. ESTILIZAÇÃO CSS CUSTOMIZADA (FORÇANDO FUNDO SÓLIDO EM TUDO)
 # ==========================================
 st.markdown("""
     <style>
@@ -54,7 +54,7 @@ st.markdown("""
             font-weight: 600;
         }
 
-        /* Garantindo o fundo #121824 de ponta a ponta em todos os 3 blocos com borda */
+        /* Forçar fundo #121824 em TODOS os contêineres e blocos internos */
         [data-testid="stVerticalBlockBorderWrapper"] {
             background-color: #121824 !important;
             border: 1px solid #1e293b !important;
@@ -63,20 +63,12 @@ st.markdown("""
             margin-bottom: 20px !important;
         }
 
-        /* Tornando todos os elementos internos transparentes para exibir o fundo sólido do bloco */
         [data-testid="stVerticalBlockBorderWrapper"] div,
         [data-testid="stVerticalBlockBorderWrapper"] section,
         [data-testid="stVerticalBlockBorderWrapper"] [data-testid="stVerticalBlock"],
         [data-testid="stVerticalBlockBorderWrapper"] [data-testid="stHorizontalBlock"],
         [data-testid="stVerticalBlockBorderWrapper"] [data-testid="stColumn"] {
             background-color: transparent !important;
-        }
-
-        /* Forçando o fundo correto na Tabela (Bloco 7) */
-        [data-testid="stDataFrame"], 
-        [data-testid="stDataFrame"] > div, 
-        [data-testid="stDataFrame"] div[data-baseweb="block"] {
-            background-color: #121824 !important;
         }
 
         /* Cartões de Métricas Superiores */
@@ -130,6 +122,33 @@ st.markdown("""
             margin-bottom: 12px;
             text-transform: uppercase;
         }
+
+        /* Estilização da Tabela Customizada */
+        .custom-table {
+            width: 100%;
+            border-collapse: collapse;
+            color: #ffffff;
+            font-size: 13px;
+        }
+        .custom-table th {
+            text-align: left;
+            padding: 10px 12px;
+            color: #64748b;
+            font-size: 11px;
+            text-transform: uppercase;
+            border-bottom: 1px solid #1e293b;
+        }
+        .custom-table td {
+            padding: 12px;
+            border-bottom: 1px solid #1e293b;
+            color: #f8fafc;
+        }
+        .action-btn {
+            color: #38bdf8;
+            cursor: pointer;
+            font-weight: 500;
+            margin-right: 8px;
+        }
     </style>
 """, unsafe_allow_html=True)
 
@@ -165,7 +184,7 @@ with col_status:
 st.markdown("<br>", unsafe_allow_html=True)
 
 # ==========================================
-# 5. BLOCO DE MÉTRICAS SUPERIORES (Investimento, Faturamento, ROAS, Leads)
+# 5. BLOCO DE MÉTRICAS SUPERIORES
 # ==========================================
 m1, m2, m3, m4 = st.columns(4)
 
@@ -208,7 +227,7 @@ with m4:
 st.markdown("<br>", unsafe_allow_html=True)
 
 # ==========================================
-# 6. SESSÃO 1: CRESCIMENTO DE VENDAS VS. GASTO (Bloco 1)
+# 6. SESSÃO 1: CRESCIMENTO DE VENDAS VS. GASTO (Gráfico)
 # ==========================================
 with st.container(border=True):
     st.markdown('<div class="block-header">CRESCIMENTO DE VENDAS VS. GASTO</div>', unsafe_allow_html=True)
@@ -231,31 +250,53 @@ with st.container(border=True):
     st.plotly_chart(fig, use_container_width=True)
 
 # ==========================================
-# 7. SESSÃO 2: TABELA DE PERFORMANCE POR CAMPANHA (Bloco 2)
+# 7. SESSÃO 2: TABELA DE PERFORMANCE POR CAMPANHA (Preenchimento Total)
 # ==========================================
 with st.container(border=True):
     st.markdown('<div class="block-header">TABELA: PERFORMANCE POR CAMPANHA (Deep Dive)</div>', unsafe_allow_html=True)
 
-    df_campanhas = pd.DataFrame({
-        'Campanha': ['Campanha A', 'Campanha B'],
-        'Gasto': ['R$ 500', 'R$ 500'],
-        'Cliques': [120, 120],
-        'CPA Real': ['R$ 15,20', 'R$ 15,20'],
-        'Status': ['🟢 ATIVA', '🟢 ATIVA'],
-        'Ações': ['[Pausar] [Otimizar]', '[Pausar] [Otimizar]']
-    })
-
-    st.dataframe(df_campanhas, use_container_width=True, hide_index=True)
+    st.markdown("""
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>Campanha</th>
+                    <th>Gasto</th>
+                    <th>Cliques</th>
+                    <th>CPA Real</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Campanha A</td>
+                    <td>R$ 500</td>
+                    <td>120</td>
+                    <td>R$ 15,20</td>
+                    <td><span style="color: #22c55e;">🟢 ATIVA</span></td>
+                    <td><span class="action-btn">[Pausar]</span> <span class="action-btn">[Otimizar]</span></td>
+                </tr>
+                <tr>
+                    <td>Campanha B</td>
+                    <td>R$ 500</td>
+                    <td>120</td>
+                    <td>R$ 15,20</td>
+                    <td><span style="color: #22c55e;">🟢 ATIVA</span></td>
+                    <td><span class="action-btn">[Pausar]</span> <span class="action-btn">[Otimizar]</span></td>
+                </tr>
+            </tbody>
+        </table>
+    """, unsafe_allow_html=True)
 
 # ==========================================
-# 8. SESSÃO 3: STATUS DA INFRAESTRUTURA TÉCNICA (Bloco 3)
+# 8. SESSÃO 3: STATUS DA INFRAESTRUTURA TÉCNICA (Preenchimento Total)
 # ==========================================
 with st.container(border=True):
     st.markdown('<div class="block-header">STATUS DA INFRAESTRUTURA TÉCNICA</div>', unsafe_allow_html=True)
 
     col_infra1, col_infra2 = st.columns(2)
     with col_infra1:
-        st.markdown("✅ Pizel Meta Server-Side: <span style='color: #22c55e;'>Sincronizado</span> (Último log: 2s atrás)", unsafe_allow_html=True)
+        st.markdown("✅ Pixel Meta Server-Side: <span style='color: #22c55e;'>Sincronizado</span> (Último log: 2s atrás)", unsafe_allow_html=True)
         st.markdown("✅ API de Conversão Google: <span style='color: #22c55e;'>OK</span>", unsafe_allow_html=True)
 
     with col_infra2:
