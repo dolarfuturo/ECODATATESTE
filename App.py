@@ -13,7 +13,7 @@ st.set_page_config(
 )
 
 # ==========================================
-# 2. ESTILIZAÇÃO CSS CUSTOMIZADA (FUNDOS SÓLIDOS IDÊNTICOS)
+# 2. ESTILIZAÇÃO CSS CUSTOMIZADA (PREENCHIMENTO TOTAL DOS BLOCOS)
 # ==========================================
 st.markdown("""
     <style>
@@ -54,17 +54,15 @@ st.markdown("""
             font-weight: 600;
         }
 
-        /* Forçando o fundo sólido #121824 em todo o container e removendo interferências internas */
-        [data-testid="stVerticalBlockBorderWrapper"] {
+        /* Preenchimento sólido e borda dos 3 grandes blocos */
+        div[data-testid="stVerticalBlockBorderWrapper"] {
             background-color: #121824 !important;
             border: 1px solid #1e293b !important;
             border-radius: 12px !important;
-            padding: 5px !important;
+            padding: 15px !important;
             margin-bottom: 20px !important;
         }
-        [data-testid="stVerticalBlockBorderWrapper"] div,
-        [data-testid="stVerticalBlockBorderWrapper"] section,
-        [data-testid="stVerticalBlockBorderWrapper"] [data-testid="stVerticalBlock"] {
+        div[data-testid="stVerticalBlockBorderWrapper"] div {
             background-color: transparent !important;
         }
 
@@ -197,7 +195,7 @@ with m4:
 st.markdown("<br>", unsafe_allow_html=True)
 
 # ==========================================
-# 6. SESSÃO 1: CRESCIMENTO DE VENDAS VS. GASTO (Bloco 1 Preenchido)
+# 6. SESSÃO 1: CRESCIMENTO DE VENDAS VS. GASTO (Com preenchimento sólido)
 # ==========================================
 with st.container(border=True):
     st.markdown('<div class="block-header">CRESCIMENTO DE VENDAS VS. GASTO</div>', unsafe_allow_html=True)
@@ -211,8 +209,8 @@ with st.container(border=True):
     fig = px.line(df_grafico, x='Dia', y=['Vendas', 'Gasto'], markers=True)
     fig.update_layout(
         template="plotly_dark",
-        plot_bgcolor="rgba(0,0,0,0)",
-        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="#121824",
+        paper_bgcolor="#121824",
         margin=dict(l=10, r=10, t=10, b=10),
         height=260,
         legend=dict(orientation="h", y=1.15, x=0)
@@ -220,7 +218,7 @@ with st.container(border=True):
     st.plotly_chart(fig, use_container_width=True)
 
 # ==========================================
-# 7. SESSÃO 2: TABELA DE PERFORMANCE POR CAMPANHA (Bloco 2 Preenchido)
+# 7. SESSÃO 2: TABELA DE PERFORMANCE POR CAMPANHA (Com preenchimento sólido)
 # ==========================================
 with st.container(border=True):
     st.markdown('<div class="block-header">TABELA: PERFORMANCE POR CAMPANHA (Deep Dive)</div>', unsafe_allow_html=True)
@@ -237,7 +235,7 @@ with st.container(border=True):
     st.dataframe(df_campanhas, use_container_width=True, hide_index=True)
 
 # ==========================================
-# 8. SESSÃO 3: STATUS DA INFRAESTRUTURA TÉCNICA (Bloco 3 Preenchido)
+# 8. SESSÃO 3: STATUS DA INFRAESTRUTURA TÉCNICA (Com preenchimento sólido)
 # ==========================================
 with st.container(border=True):
     st.markdown('<div class="block-header">STATUS DA INFRAESTRUTURA TÉCNICA</div>', unsafe_allow_html=True)
