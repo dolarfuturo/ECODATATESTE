@@ -65,6 +65,32 @@ if 'logs_data' not in st.session_state:
     ]
 
 # ==========================================
+# 1.1 CAPTURA AUTOMÁTICA DE CLIQUES E UTMs EM TEMPO REAL
+# ==========================================
+params = st.query_params
+utm_campaign_param = params.get("utm_campaign", "")
+utm_source_param = params.get("utm_source", "")
+
+if utm_campaign_param and "clique_capturado_sessao" not in st.session_state:
+    headers = st.context.headers
+    user_ip = headers.get("X-Forwarded-For", "127.0.0.1").split(",")[0]
+    
+    nome_campanha_formatado = utm_campaign_param.replace("_", " ").title()
+    if nome_campanha_formatado not in st.session_state.campanhas_cadastradas:
+        st.session_state.campanhas_cadastradas.append(nome_campanha_formatado)
+
+    novo_log = {
+        "Horário": datetime.now().strftime("%H:%M:%S"),
+        "IP": user_ip,
+        "Dispositivo": "Web / Browser",
+        "UTM": f"utm_source={utm_source_param}&utm_campaign={utm_campaign_param}",
+        "Status": "✔ Capturado"
+    }
+    
+    st.session_state.logs_data.insert(0, novo_log)
+    st.session_state.clique_capturado_sessao = True
+
+# ==========================================
 # FUNÇÕES AUXILIARES DE CÁLCULO
 # ==========================================
 def calcular_faturamento_numerico():
