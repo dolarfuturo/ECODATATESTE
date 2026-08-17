@@ -2,6 +2,7 @@ import streamlit as st
 import plotly.express as px
 import pandas as pd
 from datetime import datetime
+import streamlit.components.v1 as components
 
 # ==========================================
 # 1. CONFIGURAÇÃO GLOBAL E ESTADO INICIAL
@@ -65,11 +66,12 @@ if 'logs_data' not in st.session_state:
     ]
 
 # ==========================================
-# 1.1 CAPTURA AUTOMÁTICA DE CLIQUES E UTMs EM TEMPO REAL
+# 1.1 CAPTURA DE CLIQUES E REDIRECIONAMENTO (MODO PONTE)
 # ==========================================
 params = st.query_params
 utm_campaign_param = params.get("utm_campaign", "")
 utm_source_param = params.get("utm_source", "")
+dest_url = params.get("dest", "")
 
 if utm_campaign_param and "clique_capturado_sessao" not in st.session_state:
     headers = st.context.headers
@@ -89,6 +91,19 @@ if utm_campaign_param and "clique_capturado_sessao" not in st.session_state:
     
     st.session_state.logs_data.insert(0, novo_log)
     st.session_state.clique_capturado_sessao = True
+
+# Se o link veio com um destino de cliente, registra o clique e redireciona instantaneamente
+if dest_url:
+    # Garante que a URL tem o protocolo http/https
+    if not dest_url.startswith("http"):
+        dest_url = "https://" + dest_url
+        
+    components.html(f"""
+        <script>
+            window.location.replace("{dest_url}");
+        </script>
+    """, height=0)
+    st.stop()
 
 # ==========================================
 # FUNÇÕES AUXILIARES DE CÁLCULO
@@ -476,14 +491,15 @@ elif st.session_state.pagina_atual == '🎯 Campanhas':
                         st.warning("Nome inválido ou já existente.")
         
         with col_c2:
-            st.subheader("🔗 Gerador de Link UTM")
+            st.subheader("🔗 Gerador de Link UTM (Modo Ponte)")
             if len(st.session_state.campanhas_cadastradas) > 0:
                 camp_selecionada = st.selectbox("Escolha a campanha:", st.session_state.campanhas_cadastradas)
-                url_base = st.text_input("URL do seu site (destino):", "https://seu-dominio.com.br")
+                url_destino_cliente = st.text_input("URL do site do cliente (destino):", "https://www.queroquero.com.br")
                 
-                utm_link = f"{url_base}/?utm_source=ads&utm_campaign={camp_selecionada.lower().replace(' ', '_')}"
+                # Monta o link apontando para o ecossistema com o parâmetro 'dest' e as UTMs
+                utm_link = f"https://ecosistem.streamlit.app/?dest={url_destino_cliente}&utm_source=ads&utm_campaign={camp_selecionada.lower().replace(' ', '_')}"
                 st.code(utm_link, language="text")
-                st.info("Copie este link e cole no seu gerenciador de anúncios.")
+                st.info("Passe este link para o seu sobrinho colocar no gerenciador de anúncios.")
             else:
                 st.warning("Cadastre uma campanha primeiro para gerar o link.")
 
