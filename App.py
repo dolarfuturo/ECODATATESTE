@@ -20,7 +20,7 @@ if 'investimento_total' not in st.session_state:
     st.session_state.investimento_total = 15400.0
 
 if 'campanhas_cadastradas' not in st.session_state:
-    st.session_state.campanhas_cadastradas = ["Campanha Scale Q3", "Campanha Remarketing"]
+    st.session_state.campanhas_cadastradas = ["Campanha Scale Q3", "Campanha Remarketing", "Campanha Primavera"]
 
 if 'leads_data' not in st.session_state:
     st.session_state.leads_data = [
@@ -33,16 +33,6 @@ if 'leads_data' not in st.session_state:
             "Campanha": "Campanha Scale Q3",
             "Valor": "R$ 297,00",
             "Status": "🟢 Convertido"
-        },
-        {
-            "Data": "16/08/2026",
-            "Horário": "15:42:18",
-            "Nome": "Mariana Souza",
-            "E-mail": "mari****@outlook.com",
-            "Telefone": "(21) 97123-8899",
-            "Campanha": "Campanha Remarketing",
-            "Valor": "R$ 497,00",
-            "Status": "🟢 Convertido"
         }
     ]
 
@@ -54,15 +44,36 @@ if 'logs_data' not in st.session_state:
             "Dispositivo": "Mobile / iOS",
             "UTM": "utm_source=facebook",
             "Status": "✔ Capturado"
-        },
-        {
-            "Horário": "15:42:18",
-            "IP": "177.184.9.12",
-            "Dispositivo": "Desktop / Windows",
-            "UTM": "utm_source=instagram",
-            "Status": "✔ Capturado"
         }
     ]
+
+# ==========================================
+# 1.1 CAPTURA AUTOMÁTICA DE UTMs E CLIQUE (URL)
+# ==========================================
+params = st.query_params
+utm_campaign_param = params.get("utm_campaign", "")
+utm_source_param = params.get("utm_source", "")
+
+if utm_campaign_param and "clique_capturado_sessao" not in st.session_state:
+    # Tenta capturar o IP através dos headers do Streamlit
+    headers = st.context.headers
+    user_ip = headers.get("X-Forwarded-For", "127.0.0.1").split(",")[0]
+    
+    # Formata o nome da campanha para bater certinho com o cadastro se necessário
+    nome_campanha_formatado = utm_campaign_param.replace("_", " ").title()
+    if nome_campanha_formatado not in st.session_state.campanhas_cadastradas:
+        st.session_state.campanhas_cadastradas.append(nome_campanha_formatado)
+
+    novo_log = {
+        "Horário": datetime.now().strftime("%H:%M:%S"),
+        "IP": user_ip,
+        "Dispositivo": "Web / Browser",
+        "UTM": f"utm_source={utm_source_param}&utm_campaign={utm_campaign_param}",
+        "Status": "✔ Capturado"
+    }
+    
+    st.session_state.logs_data.insert(0, novo_log)
+    st.session_state.clique_capturado_sessao = True
 
 # ==========================================
 # FUNÇÕES AUXILIARES DE CÁLCULO
@@ -420,17 +431,6 @@ if st.session_state.pagina_atual == '📊 Visão Geral':
         tabela_deep += '</tbody></table>'
         st.markdown(tabela_deep, unsafe_allow_html=True)
 
-    # Status Infra
-    with st.container(border=True):
-        st.markdown('<div class="block-header">STATUS DA INFRAESTRUTURA TÉCNICA</div>', unsafe_allow_html=True)
-        col_infra1, col_infra2 = st.columns(2)
-        with col_infra1:
-            st.markdown("✅ Pixel Meta Server-Side: <span style='color: #22c55e;'>Sincronizado</span> (Último log: agora mesmo)", unsafe_allow_html=True)
-            st.markdown("✅ API de Conversão Google: <span style='color: #22c55e;'>OK</span>", unsafe_allow_html=True)
-        with col_infra2:
-            st.markdown("✅ Rastreamento de Leads: <span style='color: #22c55e;'>100%</span> (Sem perdas por adblockers)", unsafe_allow_html=True)
-            st.markdown("✅ Webhook Vendas: <span style='color: #22c55e;'>OK</span>", unsafe_allow_html=True)
-
 elif st.session_state.pagina_atual == '🎯 Campanhas':
     with st.container(border=True):
         st.markdown('<div class="block-header">GERENCIADOR DE ECOSSISTEMA & CAMPANHAS</div>', unsafe_allow_html=True)
@@ -453,7 +453,7 @@ elif st.session_state.pagina_atual == '🎯 Campanhas':
             st.subheader("🔗 Gerador de Link UTM")
             if len(st.session_state.campanhas_cadastradas) > 0:
                 camp_selecionada = st.selectbox("Escolha a campanha:", st.session_state.campanhas_cadastradas)
-                url_base = st.text_input("URL do seu site (destino):", "https://seu-dominio.com.br")
+                url_base = st.text_input("URL do seu site (destino):", "https://ecosistem.streamlit.app")
                 
                 utm_link = f"{url_base}/?utm_source=ads&utm_campaign={camp_selecionada.lower().replace(' ', '_')}"
                 st.code(utm_link, language="text")
@@ -461,84 +461,9 @@ elif st.session_state.pagina_atual == '🎯 Campanhas':
             else:
                 st.warning("Cadastre uma campanha primeiro para gerar o link.")
 
-        st.markdown("<br>", unsafe_allow_html=True)
-        st.markdown("### ✏️ Editar ou Deletar Campanhas Existentes")
-        
-        if len(st.session_state.campanhas_cadastradas) > 0:
-            camp_para_gerenciar = st.selectbox("Selecione a campanha para gerenciar:", st.session_state.campanhas_cadastradas, key="sel_gerenciar_camp")
-            
-            col_ed1, col_ed2 = st.columns(2)
-            with col_ed1:
-                with st.form("form_editar_campanha"):
-                    novo_nome_camp = st.text_input("Novo nome para a campanha", value=camp_para_gerenciar)
-                    btn_salvar = st.form_submit_button("💾 Salvar Alteração de Nome")
-                    if btn_salvar:
-                        if novo_nome_camp and novo_nome_camp not in st.session_state.campanhas_cadastradas:
-                            idx = st.session_state.campanhas_cadastradas.index(camp_para_gerenciar)
-                            st.session_state.campanhas_cadastradas[idx] = novo_nome_camp
-                            for lead in st.session_state.leads_data:
-                                if lead['Campanha'] == camp_para_gerenciar:
-                                    lead['Campanha'] = novo_nome_camp
-                            st.success("Campanha atualizada com sucesso!")
-                            st.rerun()
-                        else:
-                            st.warning("Nome inválido ou já existente.")
-            with col_ed2:
-                st.markdown("<br>", unsafe_allow_html=True)
-                if st.button("🗑️ Deletar Campanha Selecionada", type="primary"):
-                    if len(st.session_state.campanhas_cadastradas) > 1:
-                        st.session_state.campanhas_cadastradas.remove(camp_para_gerenciar)
-                        st.success("Campanha removida com sucesso!")
-                        st.rerun()
-                    else:
-                        st.warning("O ecossistema precisa ter pelo menos uma campanha ativa.")
-        else:
-            st.info("Nenhuma campanha cadastrada no momento.")
-
 elif st.session_state.pagina_atual == '👥 Leads':
     with st.container(border=True):
         st.markdown('<div class="block-header">👥 GESTÃO E CAPTURA DE DADOS DE USUÁRIOS (LEADS & VENDAS)</div>', unsafe_allow_html=True)
-        
-        with st.expander("➕ Simular Nova Conversão / Lead (Teste Front-End)", expanded=False):
-            with st.form("form_simulador_lead"):
-                col_f1, col_f2 = st.columns(2)
-                with col_f1:
-                    nome_input = st.text_input("Nome do Cliente", value="João Pedro")
-                    email_input = st.text_input("E-mail", value="joao.pedro@email.com")
-                with col_f2:
-                    tel_input = st.text_input("Telefone", value="(11) 99888-7766")
-                    campanha_input = st.selectbox("Campanha de Origem", st.session_state.campanhas_cadastradas)
-                
-                valor_input = st.text_input("Valor da Venda", value="197,00")
-                
-                submitted = st.form_submit_button("🚀 Simular Envio de Webhook & Captura")
-                if submitted:
-                    data_atual = datetime.now().strftime("%d/%m/%Y")
-                    horario_atual = datetime.now().strftime("%H:%M:%S")
-                    novo_lead = {
-                        "Data": data_atual,
-                        "Horário": horario_atual,
-                        "Nome": nome_input,
-                        "E-mail": email_input[:4] + "****" + email_input[email_input.find("@"):],
-                        "Telefone": tel_input,
-                        "Campanha": campanha_input,
-                        "Valor": f"R$ {valor_input}",
-                        "Status": "🟢 Convertido"
-                    }
-                    st.session_state.leads_data.insert(0, novo_lead)
-                    
-                    novo_log = {
-                        "Horário": horario_atual,
-                        "IP": "191.240.12.89",
-                        "Dispositivo": "Mobile / Android",
-                        "UTM": f"utm_campaign={campanha_input.lower().replace(' ', '_')}",
-                        "Status": "✔ Capturado"
-                    }
-                    st.session_state.logs_data.insert(0, novo_log)
-                    st.rerun()
-        
-        st.markdown("<br>", unsafe_allow_html=True)
-        st.markdown("### 📋 Histórico de Leads e Clientes Capturados")
         
         tabela_html = '<table class="custom-table"><thead><tr><th>Data</th><th>Horário</th><th>Nome</th><th>E-mail</th><th>Telefone</th><th>Campanha</th><th>Valor</th><th>Status</th></tr></thead><tbody>'
         for lead in st.session_state.leads_data:
@@ -564,32 +489,13 @@ elif st.session_state.pagina_atual == '📄 Relatórios':
         st.markdown(f"- Faturamento Consolidado: **{calcular_faturamento()}**")
         st.markdown(f"- ROAS Atual: **{calcular_roas()}**")
         st.markdown(f"- Total de Conversões Registradas: **{len(st.session_state.leads_data)}**")
-        
-        st.markdown("<br>", unsafe_allow_html=True)
-        st.markdown("### 📥 Exportar Dados")
-        
-        if len(st.session_state.leads_data) > 0:
-            df_export = pd.DataFrame(st.session_state.leads_data)
-            csv_data = df_export.to_csv(index=False).encode('utf-8')
-            st.download_button(
-                label="📄 Baixar Relatório Completo de Leads (CSV)",
-                data=csv_data,
-                file_name="relatorio_leads_ecodata.csv",
-                mime="text/csv"
-            )
-        else:
-            st.info("Nenhum dado disponível para exportação no momento.")
 
 elif st.session_state.pagina_atual == '⚙️ Configurações':
     with st.container(border=True):
         st.markdown('<div class="block-header">CONFIGURAÇÕES DO ECOSSISTEMA E APIS</div>', unsafe_allow_html=True)
-        st.markdown("Status da Conexão Server-Side: <span style='color: #22c55e;'>Ativa e Sincronizada com o banco de sessão em tempo real.</span>", unsafe_allow_html=True)
-        
-        st.markdown("<br>", unsafe_allow_html=True)
-        st.markdown("### 💰 Configuração do Valor de Investimento (Tráfego Pago)")
         with st.form("form_config_investimento"):
             novo_inv = st.number_input("Valor total investido (R$)", value=float(st.session_state.investimento_total), step=100.0, format="%.2f")
             if st.form_submit_button("💾 Atualizar Investimento"):
                 st.session_state.investimento_total = novo_inv
-                st.success("Investimento atualizado com sucesso! As métricas de ROAS e gráficos foram recalculados.")
+                st.success("Investimento atualizado com sucesso!")
                 st.rerun()
