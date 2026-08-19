@@ -4,6 +4,7 @@ import pandas as pd
 from datetime import datetime
 import streamlit.components.v1 as components
 import sqlite3
+import urllib.parse  # <--- IMPORTANTE: Adicionado para codificar a URL
 
 # ==========================================
 # CONFIGURAÇÃO DO BANCO DE DADOS SQLite
@@ -607,10 +608,13 @@ elif st.session_state.pagina_atual == '🎯 Campanhas':
         with col_c2:
             st.subheader("🔗 Gerador de Link UTM (Modo Ponte)")
             if len(campanhas_atuais) > 0:
-                camp_selecionada = st.selectbox("Escolha a campanha:", campanhas_atuais)
+                camp_selecionada = st.selectbox("Escolha a campanha:", campanhas_atuais, key="sel_camp_gerador")
                 url_destino_cliente = st.text_input("URL do site do cliente (destino):", "https://www.queroquero.com.br")
                 
-                utm_link = f"https://ecosistem.streamlit.app/?dest={url_destino_cliente}&utm_source=ads&utm_campaign={camp_selecionada.lower().replace(' ', '_')}"
+                # CORREÇÃO APLICADA AQUI: Codificação da URL
+                url_codificada = urllib.parse.quote(url_destino_cliente, safe="")
+                
+                utm_link = f"https://ecosistem.streamlit.app/?dest={url_codificada}&utm_source=ads&utm_campaign={camp_selecionada.lower().replace(' ', '_')}"
                 st.code(utm_link, language="text")
                 st.info("Passe este link para o seu sobrinho colocar no gerenciador de anúncios.")
             else:
