@@ -3,6 +3,165 @@ import plotly.express as px
 import pandas as pd
 from datetime import datetime
 import streamlit.components.v1 as components
+import sqlite3
+
+# ==========================================
+# CONFIGURAÇÃO DO BANCO DE DADOS SQLite
+# ==========================================
+DB_NAME = "ecodata.db"
+
+def init_db():
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS leads (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            data TEXT,
+            horario TEXT,
+            nome TEXT,
+            email TEXT,
+            telefone TEXT,
+            campanha TEXT,
+            valor TEXT,
+            status TEXT
+        )
+    ''')
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            horario TEXT,
+            ip TEXT,
+            dispositivo TEXT,
+            utm TEXT,
+            status TEXT
+        )
+    ''')
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS campanhas (
+            nome TEXT PRIMARY KEY
+        )
+    ''')
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS configuracoes (
+            chave TEXT PRIMARY KEY,
+            valor TEXT
+        )
+    ''')
+    
+    # Dados padrão iniciais se estiver vazio
+    cursor.execute("SELECT COUNT(*) FROM campanhas")
+    if cursor.fetchone()[0] == 0:
+        cursor.execute("INSERT INTO campanhas (nome) VALUES (?)", ("Campanha Scale Q3",))
+        cursor.execute("INSERT INTO campanhas (nome) VALUES (?)", ("Campanha Remarketing",))
+
+    cursor.execute("SELECT COUNT(*) FROM leads")
+    if cursor.fetchone()[0] == 0:
+        cursor.execute('''
+            INSERT INTO leads (data, horario, nome, email, telefone, campanha, valor, status)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ''', ("16/08/2026", "16:11:02", "Carlos Silva", "carlos****@gmail.com", "(11) 98765-4321", "Campanha Scale Q3", "R$ 297,00", "🟢 Convertido"))
+        cursor.execute('''
+            INSERT INTO leads (data, horario, nome, email, telefone, campanha, valor, status)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ''', ("16/08/2026", "15:42:18", "Mariana Souza", "mari****@outlook.com", "(21) 97123-8899", "Campanha Remarketing", "R$ 497,00", "🟢 Convertido"))
+
+    cursor.execute("SELECT COUNT(*) FROM logs")
+    if cursor.fetchone()[0] == 0:
+        cursor.execute('''
+            INSERT INTO logs (horario, ip, dispositivo, utm, status)
+            VALUES (?, ?, ?, ?, ?)
+        ''', ("16:11:02", "187.12.44.192", "Mobile / iOS", "utm_source=facebook", "✔ Capturado"))
+        cursor.execute('''
+            INSERT INTO logs (horario, ip, dispositivo, utm, status)
+            VALUES (?, ?, ?, ?, ?)
+        ''', ("15:42:18", "177.184.9.12", "Desktop / Windows", "utm_source=instagram", "✔ Capturado"))
+
+    cursor.execute("SELECT valor FROM configuracoes WHERE chave = 'investimento_total'")
+    if not cursor.fetchone():
+        cursor.execute("INSERT INTO configuracoes (chave, valor) VALUES ('investimento_total', '15400.0')")
+
+    conn.commit()
+    conn.close()
+
+init_db()
+
+# Funções de Leitura do Banco
+def carregar_leads():
+    conn = sqlite3.connect(DB_NAME)
+    df = pd.read_sql_query("SELECT * FROM leads ORDER BY id DESC", conn)
+    conn.close()
+    return df.to_dict(orient='records')
+
+def carregar_logs():
+    conn = sqlite3.connect(DB_NAME)
+    df = pd.read_sql_query("SELECT * FROM logs ORDER BY id DESC", conn)
+    conn.close()
+    return df.to_dict(orient='records')
+
+def carregar_campanhas():
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    cursor.execute("SELECT nome FROM campanhas")
+    res = [row[0] for row in cursor.fetchall()]
+    conn.close()
+    return res
+
+def carregar_investimento():
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    cursor.execute("SELECT valor FROM configuracoes WHERE chave = 'investimento_total'")
+    res = cursor.fetchone()
+    conn.close()
+    return float(res[0]) if res else 15400.0
+
+def salvar_investimento(valor):
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    cursor.execute("INSERT OR REPLACE INTO configuracoes (chave, valor) VALUES ('investimento_total', ?)", (str(valor),))
+    conn.commit()
+    conn.close()
+
+def inserir_lead_db(lead_dict):
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    cursor.execute('''
+        INSERT INTO leads (data, horario, nome, email, telefone, campanha, valor, status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    ''', (lead_dict["Data"], lead_dict["Horário"], lead_dict["Nome"], lead_dict["E-mail"], lead_dict["Telefone"], lead_dict["Campanha"], lead_dict["Valor"], lead_dict["Status"]))
+    conn.commit()
+    conn.close()
+
+def inserir_log_db(log_dict):
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    cursor.execute('''
+        INSERT INTO logs (horario, ip, dispositivo, utm, status)
+        VALUES (?, ?, ?, ?, ?)
+    ''', (log_dict["Horário"], log_dict["IP"], log_dict["Dispositivo"], log_dict["UTM"], log_dict["Status"]))
+    conn.commit()
+    conn.close()
+
+def adicionar_campanha_db(nome):
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    cursor.execute("INSERT OR IGNORE INTO campanhas (nome) VALUES (?)", (nome,))
+    conn.commit()
+    conn.close()
+
+def deletar_campanha_db(nome):
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM campanhas WHERE nome = ?", (nome,))
+    conn.commit()
+    conn.close()
+
+def atualizar_campanha_db(antigo, novo):
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    cursor.execute("UPDATE campanhas SET nome = ? WHERE nome = ?", (novo, antigo))
+    cursor.execute("UPDATE leads SET campanha = ? WHERE campanha = ?", (novo, antigo))
+    conn.commit()
+    conn.close()
 
 # ==========================================
 # 1. CONFIGURAÇÃO GLOBAL E ESTADO INICIAL
@@ -17,54 +176,6 @@ st.set_page_config(
 if 'pagina_atual' not in st.session_state:
     st.session_state.pagina_atual = '📊 Visão Geral'
 
-if 'investimento_total' not in st.session_state:
-    st.session_state.investimento_total = 15400.0
-
-if 'campanhas_cadastradas' not in st.session_state:
-    st.session_state.campanhas_cadastradas = ["Campanha Scale Q3", "Campanha Remarketing"]
-
-if 'leads_data' not in st.session_state:
-    st.session_state.leads_data = [
-        {
-            "Data": "16/08/2026",
-            "Horário": "16:11:02",
-            "Nome": "Carlos Silva",
-            "E-mail": "carlos****@gmail.com",
-            "Telefone": "(11) 98765-4321",
-            "Campanha": "Campanha Scale Q3",
-            "Valor": "R$ 297,00",
-            "Status": "🟢 Convertido"
-        },
-        {
-            "Data": "16/08/2026",
-            "Horário": "15:42:18",
-            "Nome": "Mariana Souza",
-            "E-mail": "mari****@outlook.com",
-            "Telefone": "(21) 97123-8899",
-            "Campanha": "Campanha Remarketing",
-            "Valor": "R$ 497,00",
-            "Status": "🟢 Convertido"
-        }
-    ]
-
-if 'logs_data' not in st.session_state:
-    st.session_state.logs_data = [
-        {
-            "Horário": "16:11:02",
-            "IP": "187.12.44.192",
-            "Dispositivo": "Mobile / iOS",
-            "UTM": "utm_source=facebook",
-            "Status": "✔ Capturado"
-        },
-        {
-            "Horário": "15:42:18",
-            "IP": "177.184.9.12",
-            "Dispositivo": "Desktop / Windows",
-            "UTM": "utm_source=instagram",
-            "Status": "✔ Capturado"
-        }
-    ]
-
 # ==========================================
 # 1.1 CAPTURA DE CLIQUES E REDIRECIONAMENTO (MODO PONTE)
 # ==========================================
@@ -78,8 +189,9 @@ if utm_campaign_param and "clique_capturado_sessao" not in st.session_state:
     user_ip = headers.get("X-Forwarded-For", "127.0.0.1").split(",")[0]
     
     nome_campanha_formatado = utm_campaign_param.replace("_", " ").title()
-    if nome_campanha_formatado not in st.session_state.campanhas_cadastradas:
-        st.session_state.campanhas_cadastradas.append(nome_campanha_formatado)
+    campanhas_atuais = carregar_campanhas()
+    if nome_campanha_formatado not in campanhas_atuais:
+        adicionar_campanha_db(nome_campanha_formatado)
 
     novo_log = {
         "Horário": datetime.now().strftime("%H:%M:%S"),
@@ -88,13 +200,10 @@ if utm_campaign_param and "clique_capturado_sessao" not in st.session_state:
         "UTM": f"utm_source={utm_source_param}&utm_campaign={utm_campaign_param}",
         "Status": "✔ Capturado"
     }
-    
-    st.session_state.logs_data.insert(0, novo_log)
+    inserir_log_db(novo_log)
     st.session_state.clique_capturado_sessao = True
 
-# Se o link veio com um destino de cliente, registra o clique e redireciona instantaneamente
 if dest_url:
-    # Garante que a URL tem o protocolo http/https
     if not dest_url.startswith("http"):
         dest_url = "https://" + dest_url
         
@@ -109,9 +218,10 @@ if dest_url:
 # FUNÇÕES AUXILIARES DE CÁLCULO
 # ==========================================
 def calcular_faturamento_numerico():
+    leads = carregar_leads()
     total = 0.0
-    for lead in st.session_state.leads_data:
-        val = lead['Valor'].replace('R$', '').replace('.', '').replace(',', '.').strip()
+    for lead in leads:
+        val = lead['valor'].replace('R$', '').replace('.', '').replace(',', '.').strip()
         try:
             total += float(val)
         except:
@@ -123,11 +233,11 @@ def calcular_faturamento():
     return f"R$ {total:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
 
 def calcular_investimento():
-    inv = st.session_state.investimento_total
+    inv = carregar_investimento()
     return f"R$ {inv:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
 
 def calcular_roas():
-    investimento_total = st.session_state.investimento_total
+    investimento_total = carregar_investimento()
     faturamento = calcular_faturamento_numerico()
     if investimento_total > 0:
         roas_val = faturamento / investimento_total
@@ -135,7 +245,7 @@ def calcular_roas():
     return "0.00x"
 
 def calcular_percentual_faturamento():
-    inv = st.session_state.investimento_total
+    inv = carregar_investimento()
     fat = calcular_faturamento_numerico()
     if inv > 0:
         perc = ((fat - inv) / inv) * 100
@@ -144,10 +254,12 @@ def calcular_percentual_faturamento():
     return "▲ 0.0% vs Inv.", True
 
 def calcular_faturamento_por_campanha():
-    resumo = {camp: 0.0 for camp in st.session_state.campanhas_cadastradas}
-    for lead in st.session_state.leads_data:
-        campanha = lead['Campanha']
-        val_str = lead['Valor'].replace('R$', '').replace('.', '').replace(',', '.').strip()
+    campanhas = carregar_campanhas()
+    leads = carregar_leads()
+    resumo = {camp: 0.0 for camp in campanhas}
+    for lead in leads:
+        campanha = lead['campanha']
+        val_str = lead['valor'].replace('R$', '').replace('.', '').replace(',', '.').strip()
         try:
             val = float(val_str)
         except:
@@ -328,16 +440,19 @@ st.markdown('</div>', unsafe_allow_html=True)
 # 4. CONTEÚDO DINÂMICO DA APLICAÇÃO
 # ==========================================
 
+leads_atuais = carregar_leads()
+logs_atuais = carregar_logs()
+campanhas_atuais = carregar_campanhas()
+
 if st.session_state.pagina_atual == '📊 Visão Geral':
     col_filter, col_status = st.columns([3, 1])
     with col_filter:
         st.markdown("<span style='color: #94a3b8; font-size: 13px;'>Filtro de Data:</span> &nbsp;&nbsp; `[ Últimos 30 Dias ▾ ]`", unsafe_allow_html=True)
     with col_status:
-        st.markdown("<div style='text-align: right;'><span class='status-badge'>🟢 ONLINE - API ATIVA</span></div>", unsafe_allow_html=True)
+        st.markdown("<div style='text-align: right;'><span class='status-badge'>🟢 ONLINE - WEBHOOK ATIVO</span></div>", unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # Bloco de Métricas
     txt_perc_fat, eh_positivo_fat = calcular_percentual_faturamento()
     classe_sub_fat = "metric-sub-green" if eh_positivo_fat else "metric-sub-red"
 
@@ -370,14 +485,13 @@ if st.session_state.pagina_atual == '📊 Visão Geral':
         st.markdown(f"""
             <div class="metric-box">
                 <div class="metric-title">[LEADS QUALIFICADOS]</div>
-                <div class="metric-value">{len(st.session_state.leads_data)}</div>
+                <div class="metric-value">{len(leads_atuais)}</div>
                 <div class="metric-sub-green">Taxa conv. 4.2%</div>
             </div>
         """, unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # TABELA DE FATURAMENTO POR CAMPANHA
     with st.container(border=True):
         st.markdown('<div class="block-header">FATURAMENTO POR CAMPANHA</div>', unsafe_allow_html=True)
         resumo_campanha = calcular_faturamento_por_campanha()
@@ -388,22 +502,21 @@ if st.session_state.pagina_atual == '📊 Visão Geral':
         tabela_camp += '</tbody></table>'
         st.markdown(tabela_camp, unsafe_allow_html=True)
 
-    # GRÁFICO DE DUAS LINHAS (FATURAMENTO VS. INVESTIMENTO)
     with st.container(border=True):
         st.markdown('<div class="block-header">EVOLUÇÃO EM DUAS LINHAS: FATURAMENTO VS. INVESTIMENTO</div>', unsafe_allow_html=True)
         
-        if len(st.session_state.leads_data) > 0:
-            df_leads_sorted = sorted(st.session_state.leads_data, key=lambda x: (x.get('Data', ''), x['Horário']))
-            horarios = [f"{item.get('Data', '')} {item['Horário']}" for item in df_leads_sorted]
+        if len(leads_atuais) > 0:
+            df_leads_sorted = sorted(leads_atuais, key=lambda x: (x.get('data', ''), x['horario']))
+            horarios = [f"{item.get('data', '')} {item['horario']}" for item in df_leads_sorted]
             
             valores_vendas = []
             acumulado_vendas = 0.0
-            total_investimento_base = st.session_state.investimento_total
+            total_investimento_base = carregar_investimento()
             n_pontos = len(df_leads_sorted)
             valores_gasto = []
             
             for i, item in enumerate(df_leads_sorted):
-                v_str = item['Valor'].replace('R$', '').replace('.', '').replace(',', '.').strip()
+                v_str = item['valor'].replace('R$', '').replace('.', '').replace(',', '.').strip()
                 try:
                     val = float(v_str)
                 except:
@@ -435,14 +548,13 @@ if st.session_state.pagina_atual == '📊 Visão Geral':
         )
         st.plotly_chart(fig, use_container_width=True)
 
-    # TABELA DE PERFORMANCE POR CAMPANHA (DEEP DIVE)
     with st.container(border=True):
         st.markdown('<div class="block-header">TABELA: PERFORMANCE POR CAMPANHA (Deep Dive)</div>', unsafe_allow_html=True)
         
         perf_campanhas = {}
-        for lead in st.session_state.leads_data:
-            camp = lead['Campanha']
-            val_str = lead['Valor'].replace('R$', '').replace('.', '').replace(',', '.').strip()
+        for lead in leads_atuais:
+            camp = lead['campanha']
+            val_str = lead['valor'].replace('R$', '').replace('.', '').replace(',', '.').strip()
             try:
                 v = float(val_str)
             except:
@@ -454,23 +566,22 @@ if st.session_state.pagina_atual == '📊 Visão Geral':
             perf_campanhas[camp]['receita'] += v
             
         tabela_deep = '<table class="custom-table"><thead><tr><th>Campanha</th><th>Conversões</th><th>Receita Gerada</th><th>Status</th><th>Ações</th></tr></thead><tbody>'
-        for camp in st.session_state.campanhas_cadastradas:
+        for camp in campanhas_atuais:
             dados = perf_campanhas.get(camp, {'conversoes': 0, 'receita': 0.0})
             rev_fmt = f"R$ {dados['receita']:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
             tabela_deep += f'<tr><td>{camp}</td><td>{dados["conversoes"]} leads</td><td style="color: #22c55e; font-weight: bold;">{rev_fmt}</td><td><span style="color: #22c55e;">🟢 ATIVA</span></td><td><span class="action-btn">[Pausar]</span> <span class="action-btn">[Otimizar]</span></td></tr>'
         tabela_deep += '</tbody></table>'
         st.markdown(tabela_deep, unsafe_allow_html=True)
 
-    # Status Infra
     with st.container(border=True):
         st.markdown('<div class="block-header">STATUS DA INFRAESTRUTURA TÉCNICA</div>', unsafe_allow_html=True)
         col_infra1, col_infra2 = st.columns(2)
         with col_infra1:
-            st.markdown("✅ Pixel Meta Server-Side: <span style='color: #22c55e;'>Sincronizado</span> (Último log: agora mesmo)", unsafe_allow_html=True)
+            st.markdown("✅ Pixel Meta Server-Side: <span style='color: #22c55e;'>Sincronizado</span>", unsafe_allow_html=True)
             st.markdown("✅ API de Conversão Google: <span style='color: #22c55e;'>OK</span>", unsafe_allow_html=True)
         with col_infra2:
-            st.markdown("✅ Rastreamento de Leads: <span style='color: #22c55e;'>100%</span> (Sem perdas por adblockers)", unsafe_allow_html=True)
-            st.markdown("✅ Webhook Vendas: <span style='color: #22c55e;'>OK</span>", unsafe_allow_html=True)
+            st.markdown("✅ Rastreamento de Leads: <span style='color: #22c55e;'>100%</span>", unsafe_allow_html=True)
+            st.markdown("✅ Webhook Flask Endpoint: <span style='color: #22c55e;'>Ativo (/webhook)</span>", unsafe_allow_html=True)
 
 elif st.session_state.pagina_atual == '🎯 Campanhas':
     with st.container(border=True):
@@ -483,8 +594,8 @@ elif st.session_state.pagina_atual == '🎯 Campanhas':
             with st.form("form_nova_campanha"):
                 nova_camp = st.text_input("Nome da Campanha (ex: Lançamento Outubro)")
                 if st.form_submit_button("Registrar no Ecossistema"):
-                    if nova_camp and nova_camp not in st.session_state.campanhas_cadastradas:
-                        st.session_state.campanhas_cadastradas.append(nova_camp)
+                    if nova_camp and nova_camp not in campanhas_atuais:
+                        adicionar_campanha_db(nova_camp)
                         st.success(f"Campanha '{nova_camp}' registrada com sucesso!")
                         st.rerun()
                     else:
@@ -492,11 +603,10 @@ elif st.session_state.pagina_atual == '🎯 Campanhas':
         
         with col_c2:
             st.subheader("🔗 Gerador de Link UTM (Modo Ponte)")
-            if len(st.session_state.campanhas_cadastradas) > 0:
-                camp_selecionada = st.selectbox("Escolha a campanha:", st.session_state.campanhas_cadastradas)
+            if len(campanhas_atuais) > 0:
+                camp_selecionada = st.selectbox("Escolha a campanha:", campanhas_atuais)
                 url_destino_cliente = st.text_input("URL do site do cliente (destino):", "https://www.queroquero.com.br")
                 
-                # Monta o link apontando para o ecossistema com o parâmetro 'dest' e as UTMs
                 utm_link = f"https://ecosistem.streamlit.app/?dest={url_destino_cliente}&utm_source=ads&utm_campaign={camp_selecionada.lower().replace(' ', '_')}"
                 st.code(utm_link, language="text")
                 st.info("Passe este link para o seu sobrinho colocar no gerenciador de anúncios.")
@@ -506,8 +616,8 @@ elif st.session_state.pagina_atual == '🎯 Campanhas':
         st.markdown("<br>", unsafe_allow_html=True)
         st.markdown("### ✏️ Editar ou Deletar Campanhas Existentes")
         
-        if len(st.session_state.campanhas_cadastradas) > 0:
-            camp_para_gerenciar = st.selectbox("Selecione a campanha para gerenciar:", st.session_state.campanhas_cadastradas, key="sel_gerenciar_camp")
+        if len(campanhas_atuais) > 0:
+            camp_para_gerenciar = st.selectbox("Selecione a campanha para gerenciar:", campanhas_atuais, key="sel_gerenciar_camp")
             
             col_ed1, col_ed2 = st.columns(2)
             with col_ed1:
@@ -515,12 +625,8 @@ elif st.session_state.pagina_atual == '🎯 Campanhas':
                     novo_nome_camp = st.text_input("Novo nome para a campanha", value=camp_para_gerenciar)
                     btn_salvar = st.form_submit_button("💾 Salvar Alteração de Nome")
                     if btn_salvar:
-                        if novo_nome_camp and novo_nome_camp not in st.session_state.campanhas_cadastradas:
-                            idx = st.session_state.campanhas_cadastradas.index(camp_para_gerenciar)
-                            st.session_state.campanhas_cadastradas[idx] = novo_nome_camp
-                            for lead in st.session_state.leads_data:
-                                if lead['Campanha'] == camp_para_gerenciar:
-                                    lead['Campanha'] = novo_nome_camp
+                        if novo_nome_camp and novo_nome_camp not in campanhas_atuais:
+                            atualizar_campanha_db(camp_para_gerenciar, novo_nome_camp)
                             st.success("Campanha atualizada com sucesso!")
                             st.rerun()
                         else:
@@ -528,8 +634,8 @@ elif st.session_state.pagina_atual == '🎯 Campanhas':
             with col_ed2:
                 st.markdown("<br>", unsafe_allow_html=True)
                 if st.button("🗑️ Deletar Campanha Selecionada", type="primary"):
-                    if len(st.session_state.campanhas_cadastradas) > 1:
-                        st.session_state.campanhas_cadastradas.remove(camp_para_gerenciar)
+                    if len(campanhas_atuais) > 1:
+                        deletar_campanha_db(camp_para_gerenciar)
                         st.success("Campanha removida com sucesso!")
                         st.rerun()
                     else:
@@ -549,7 +655,7 @@ elif st.session_state.pagina_atual == '👥 Leads':
                     email_input = st.text_input("E-mail", value="joao.pedro@email.com")
                 with col_f2:
                     tel_input = st.text_input("Telefone", value="(11) 99888-7766")
-                    campanha_input = st.selectbox("Campanha de Origem", st.session_state.campanhas_cadastradas)
+                    campanha_input = st.selectbox("Campanha de Origem", campanhas_atuais)
                 
                 valor_input = st.text_input("Valor da Venda", value="197,00")
                 
@@ -561,13 +667,13 @@ elif st.session_state.pagina_atual == '👥 Leads':
                         "Data": data_atual,
                         "Horário": horario_atual,
                         "Nome": nome_input,
-                        "E-mail": email_input[:4] + "****" + email_input[email_input.find("@"):],
+                        "E-mail": email_input[:4] + "****" + email_input[email_input.find("@"):] if "@" in email_input else "cli****@email.com",
                         "Telefone": tel_input,
                         "Campanha": campanha_input,
                         "Valor": f"R$ {valor_input}",
                         "Status": "🟢 Convertido"
                     }
-                    st.session_state.leads_data.insert(0, novo_lead)
+                    inserir_lead_db(novo_lead)
                     
                     novo_log = {
                         "Horário": horario_atual,
@@ -576,16 +682,16 @@ elif st.session_state.pagina_atual == '👥 Leads':
                         "UTM": f"utm_campaign={campanha_input.lower().replace(' ', '_')}",
                         "Status": "✔ Capturado"
                     }
-                    st.session_state.logs_data.insert(0, novo_log)
+                    inserir_log_db(novo_log)
                     st.rerun()
         
         st.markdown("<br>", unsafe_allow_html=True)
         st.markdown("### 📋 Histórico de Leads e Clientes Capturados")
         
         tabela_html = '<table class="custom-table"><thead><tr><th>Data</th><th>Horário</th><th>Nome</th><th>E-mail</th><th>Telefone</th><th>Campanha</th><th>Valor</th><th>Status</th></tr></thead><tbody>'
-        for lead in st.session_state.leads_data:
-            data_lead = lead.get("Data", "16/08/2026")
-            tabela_html += f'<tr><td>{data_lead}</td><td>{lead["Horário"]}</td><td>{lead["Nome"]}</td><td>{lead["E-mail"]}</td><td>{lead["Telefone"]}</td><td>{lead["Campanha"]}</td><td style="color: #22c55e; font-weight: bold;">{lead["Valor"]}</td><td><span style="color: #22c55e;">{lead["Status"]}</span></td></tr>'
+        for lead in leads_atuais:
+            data_lead = lead.get("data", "16/08/2026")
+            tabela_html += f'<tr><td>{data_lead}</td><td>{lead["horario"]}</td><td>{lead["nome"]}</td><td>{lead["email"]}</td><td>{lead["telefone"]}</td><td>{lead["campanha"]}</td><td style="color: #22c55e; font-weight: bold;">{lead["valor"]}</td><td><span style="color: #22c55e;">{lead["status"]}</span></td></tr>'
         tabela_html += '</tbody></table>'
         st.markdown(tabela_html, unsafe_allow_html=True)
 
@@ -594,8 +700,8 @@ elif st.session_state.pagina_atual == '🔍 Rastreamento e Logs':
         st.markdown('<div class="block-header">FONTE DA VERDADE: LOGS DE CLIQUES E DADOS DE AUDITORIA (SERVER-SIDE)</div>', unsafe_allow_html=True)
         
         tabela_logs = '<table class="custom-table"><thead><tr><th>Horário</th><th>IP / Origem</th><th>Dispositivo</th><th>UTM Campaign</th><th>Status</th></tr></thead><tbody>'
-        for log in st.session_state.logs_data:
-            tabela_logs += f'<tr><td>{log["Horário"]}</td><td>{log["IP"]}</td><td>{log["Dispositivo"]}</td><td>{log["UTM"]}</td><td><span style="color: #22c55e;">{log["Status"]}</span></td></tr>'
+        for log in logs_atuais:
+            tabela_logs += f'<tr><td>{log["horario"]}</td><td>{log["ip"]}</td><td>{log["dispositivo"]}</td><td>{log["utm"]}</td><td><span style="color: #22c55e;">{log["status"]}</span></td></tr>'
         tabela_logs += '</tbody></table>'
         st.markdown(tabela_logs, unsafe_allow_html=True)
 
@@ -605,13 +711,13 @@ elif st.session_state.pagina_atual == '📄 Relatórios':
         st.markdown(f"- Investimento Total: **{calcular_investimento()}**")
         st.markdown(f"- Faturamento Consolidado: **{calcular_faturamento()}**")
         st.markdown(f"- ROAS Atual: **{calcular_roas()}**")
-        st.markdown(f"- Total de Conversões Registradas: **{len(st.session_state.leads_data)}**")
+        st.markdown(f"- Total de Conversões Registradas: **{len(leads_atuais)}**")
         
         st.markdown("<br>", unsafe_allow_html=True)
         st.markdown("### 📥 Exportar Dados")
         
-        if len(st.session_state.leads_data) > 0:
-            df_export = pd.DataFrame(st.session_state.leads_data)
+        if len(leads_atuais) > 0:
+            df_export = pd.DataFrame(leads_atuais)
             csv_data = df_export.to_csv(index=False).encode('utf-8')
             st.download_button(
                 label="📄 Baixar Relatório Completo de Leads (CSV)",
@@ -625,13 +731,13 @@ elif st.session_state.pagina_atual == '📄 Relatórios':
 elif st.session_state.pagina_atual == '⚙️ Configurações':
     with st.container(border=True):
         st.markdown('<div class="block-header">CONFIGURAÇÕES DO ECOSSISTEMA E APIS</div>', unsafe_allow_html=True)
-        st.markdown("Status da Conexão Server-Side: <span style='color: #22c55e;'>Ativa e Sincronizada com o banco de sessão em tempo real.</span>", unsafe_allow_html=True)
+        st.markdown("Status da Conexão Server-Side: <span style='color: #22c55e;'>Ativa e Sincronizada com o banco SQLite em tempo real.</span>", unsafe_allow_html=True)
         
         st.markdown("<br>", unsafe_allow_html=True)
         st.markdown("### 💰 Configuração do Valor de Investimento (Tráfego Pago)")
         with st.form("form_config_investimento"):
-            novo_inv = st.number_input("Valor total investido (R$)", value=float(st.session_state.investimento_total), step=100.0, format="%.2f")
+            novo_inv = st.number_input("Valor total investido (R$)", value=float(carregar_investimento()), step=100.0, format="%.2f")
             if st.form_submit_button("💾 Atualizar Investimento"):
-                st.session_state.investimento_total = novo_inv
+                salvar_investimento(novo_inv)
                 st.success("Investimento atualizado com sucesso! As métricas de ROAS e gráficos foram recalculados.")
                 st.rerun()
