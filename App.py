@@ -177,7 +177,7 @@ if 'pagina_atual' not in st.session_state:
     st.session_state.pagina_atual = '📊 Visão Geral'
 
 # ==========================================
-# 1.1 CAPTURA DE CLIQUES E REDIRECIONAMENTO (MODO PONTE)
+# 1.1 CAPTURA DE CLIQUES E REDIRECIONAMENTO (MODO PONTE AVANÇADO)
 # ==========================================
 params = st.query_params
 utm_campaign_param = params.get("utm_campaign", "")
@@ -207,9 +207,12 @@ if dest_url:
     if not dest_url.startswith("http"):
         dest_url = "https://" + dest_url
         
+    separador = "&" if "?" in dest_url else "?"
+    url_com_rastreio = f"{dest_url}{separador}utm_source={utm_source_param}&utm_campaign={utm_campaign_param}"
+        
     components.html(f"""
         <script>
-            window.location.replace("{dest_url}");
+            window.location.replace("{url_com_rastreio}");
         </script>
     """, height=0)
     st.stop()
